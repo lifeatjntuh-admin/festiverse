@@ -1,0 +1,124 @@
+{
+    "app": {
+        "name": "Festiverse",
+        "tagline": "Your fest companion"
+    },
+    "nav": {
+        "home": "Home",
+        "schedule": "Schedule",
+        "stalls": "Stalls",
+        "profile": "Profile"
+    },
+    "home": {
+        "festStartsIn": "Fest starts in",
+        "days": "Days",
+        "hours": "Hours",
+        "mins": "Mins",
+        "secs": "Secs",
+        "featuredEvents": "Featured Events",
+        "seeAll": "See All",
+        "explore": "Explore",
+        "mySchedule": "My Schedule",
+        "eventsSaved": "{{count}} events saved",
+        "venueMap": "Venue Map",
+        "navigateCampus": "Navigate campus",
+        "trendingNow": "Trending Now",
+        "going": "+{{count}} going",
+        "viewDetails": "View Details",
+        "free": "Free",
+        "fillingFast": "Filling Fast",
+        "popular": "Popular",
+        "festIsLive": "Fest is live!",
+        "festEnded": "Fest has ended"
+    },
+    "categories": {
+        "music": "Music",
+        "tech": "Tech",
+        "food": "Food",
+        "games": "Games",
+        "cultural": "Cultural",
+        "sports": "Sports",
+        "workshop": "Workshop",
+        "competition": "Competition"
+    },
+    "schedule": {
+        "day1": "Day 1",
+        "day2": "Day 2",
+        "allEvents": "All Events",
+        "technical": "Technical",
+        "cultural": "Cultural",
+        "workshops": "Workshops",
+        "noEvents": "No {{category}} events on this day",
+        "comingSoon": "Schedule will be updated soon"
+    },
+    "stalls": {
+        "filter": "Filter",
+        "all": "All",
+        "food": "Food",
+        "merch": "Merch",
+        "gaming": "Gaming",
+        "clubs": "Clubs",
+        "sponsors": "Sponsors"
+    },
+    "event": {
+        "addToSchedule": "Add to Schedule",
+        "removeFromSchedule": "Remove from Schedule",
+        "register": "Register Now",
+        "share": "Share",
+        "getDirections": "Get Directions",
+        "rules": "Rules & Guidelines",
+        "organizer": "Organizer",
+        "date": "Date",
+        "time": "Time",
+        "venue": "Venue",
+        "department": "Department",
+        "registrations": "{{count}} registered",
+        "bookmarks": "{{count}} interested"
+    },
+    "profile": {
+        "events": "Events",
+        "saved": "Saved",
+        "points": "Points",
+        "myTickets": "My Tickets",
+        "savedEvents": "Saved Events",
+        "notifications": "Notifications",
+        "settings": "Settings",
+        "organizerTools": "Organizer Tools",
+        "manageEvents": "Manage Events",
+        "signOut": "Sign Out",
+        "daysLeft": "Days Left"
+    },
+    "auth": {
+        "welcome": "Welcome to Festiverse",
+        "subtitle": "Discover events, plan your schedule, and never miss a moment",
+        "signInWithGoogle": "Sign in with Google",
+        "signingIn": "Signing in..."
+    },
+    "search": {
+        "placeholder": "Search events, stalls...",
+        "recentSearches": "Recent Searches",
+        "noResults": "No results found for \"{{query}}\"",
+        "suggestions": "Popular Events"
+    },
+    "notifications": {
+        "title": "Notifications",
+        "markAllRead": "Mark all read",
+        "noNotifications": "You're all caught up!",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "older": "Older"
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "Something went wrong",
+        "retry": "Try Again",
+        "cancel": "Cancel",
+        "save": "Save",
+        "delete": "Delete",
+        "edit": "Edit",
+        "create": "Create",
+        "back": "Back",
+        "close": "Close",
+        "confirm": "Confirm"
+    }
+}

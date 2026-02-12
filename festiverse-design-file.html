@@ -1,0 +1,642 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TechFest 2024</title>
+    
+    <!-- Fonts: Inter & Lexend -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Lexend:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Iconify -->
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+    <style>
+        /* Custom Utilities */
+        :root {
+            --font-primary: 'Inter', sans-serif;
+            --font-display: 'Lexend', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        
+        body {
+            font-family: var(--font-primary);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        h1, h2, h3, h4, .font-display {
+            font-family: var(--font-display);
+        }
+
+        .font-mono {
+            font-family: var(--font-mono);
+        }
+
+        /* Hide Scrollbar but allow scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Snap Scroll Behavior */
+        .snap-x-mandatory {
+            scroll-snap-type: x mandatory;
+        }
+        .snap-center {
+            scroll-snap-align: center;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Gradient Text */
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(to right, #2563EB, #3B82F6);
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        secondary: {
+                            500: '#f97316',
+                            600: '#ea580c',
+                        },
+                        gray: {
+                            50: '#F9FAFB',
+                            100: '#F3F4F6',
+                            200: '#E5E7EB',
+                            800: '#1f2937',
+                            900: '#111827',
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glow': '0 4px 20px -2px rgba(59, 130, 246, 0.25)',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 h-screen w-full flex justify-center items-center overflow-hidden text-gray-900 selection:bg-primary-100">
+
+    <!-- Mobile Container Simulator -->
+    <div class="relative w-full h-full max-w-md bg-gray-50 flex flex-col shadow-2xl overflow-hidden sm:rounded-[32px] sm:h-[95vh] sm:border-[8px] sm:border-gray-900">
+        
+        <!-- TOP BAR (Sticky) -->
+        <header id="top-bar" class="absolute top-0 left-0 right-0 z-40 h-14 glass border-b border-gray-100 flex items-center justify-between px-4 transition-all duration-300">
+            <!-- Left: Logo -->
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-600 to-primary-400 flex items-center justify-center text-white font-display font-bold text-sm tracking-tight shadow-glow">
+                    TF
+                </div>
+                <span class="font-display font-semibold text-lg tracking-tight text-gray-900">TechFest</span>
+            </div>
+            
+            <!-- Right: Actions -->
+            <div class="flex items-center gap-3">
+                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 active:scale-95 transition-all">
+                    <iconify-icon icon="solar:magnifer-linear" width="20" stroke-width="1.5"></iconify-icon>
+                </button>
+                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 active:scale-95 transition-all relative">
+                    <iconify-icon icon="solar:bell-bing-linear" width="20" stroke-width="1.5"></iconify-icon>
+                    <span class="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main id="main-scroll" class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar pb-24 pt-14 scroll-smooth">
+            
+            <!-- 1. HOME SECTION -->
+            <div id="view-home" class="animate-fade-in block">
+                
+                <!-- Hero Countdown -->
+                <div class="px-4 mt-6 mb-6">
+                    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-primary-500 text-white shadow-glow p-5">
+                        <div class="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+                        <div class="absolute bottom-0 left-0 -ml-4 -mb-4 w-20 h-20 bg-secondary-500 opacity-20 rounded-full blur-xl"></div>
+                        
+                        <p class="text-xs font-medium text-blue-100 uppercase tracking-wider mb-2 opacity-90">Fest starts in</p>
+                        <div class="flex items-end gap-1 font-mono">
+                            <div class="flex flex-col">
+                                <span class="text-3xl font-bold leading-none">02</span>
+                                <span class="text-[10px] opacity-80 mt-1">Days</span>
+                            </div>
+                            <span class="text-xl font-bold mb-3 opacity-60">:</span>
+                            <div class="flex flex-col">
+                                <span class="text-3xl font-bold leading-none">14</span>
+                                <span class="text-[10px] opacity-80 mt-1">Hours</span>
+                            </div>
+                            <span class="text-xl font-bold mb-3 opacity-60">:</span>
+                            <div class="flex flex-col">
+                                <span class="text-3xl font-bold leading-none">32</span>
+                                <span class="text-[10px] opacity-80 mt-1">Mins</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Featured Events (Carousel) -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center px-4 mb-3">
+                        <h3 class="text-lg font-semibold tracking-tight text-gray-900">Featured Events</h3>
+                        <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-700">See All</a>
+                    </div>
+                    
+                    <div class="flex overflow-x-auto gap-4 px-4 pb-4 snap-x-mandatory no-scrollbar">
+                        <!-- Card 1 -->
+                        <div class="snap-center shrink-0 w-[280px] bg-white rounded-2xl border border-gray-100 shadow-soft overflow-hidden group active:scale-[0.98] transition-transform duration-200">
+                            <div class="h-40 bg-gray-200 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&amp;fit=crop&amp;q=80&amp;w=600" alt="Event" class="w-full h-full object-cover">
+                                <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-semibold text-gray-900 flex items-center gap-1">
+                                    <iconify-icon icon="solar:fire-bold" class="text-secondary-500"></iconify-icon> Popular
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="text-base font-semibold text-gray-900 mb-1 leading-tight">Neon Nights Concert</h4>
+                                <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                                    <span class="flex items-center gap-1"><iconify-icon icon="solar:calendar-linear"></iconify-icon> Mar 15</span>
+                                    <span class="flex items-center gap-1"><iconify-icon icon="solar:map-point-linear"></iconify-icon> Main Arena</span>
+                                </div>
+                                <button class="w-full py-2.5 bg-gray-50 hover:bg-primary-50 text-gray-900 hover:text-primary-600 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 border border-gray-100">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="snap-center shrink-0 w-[280px] bg-white rounded-2xl border border-gray-100 shadow-soft overflow-hidden group active:scale-[0.98] transition-transform duration-200">
+                            <div class="h-40 bg-gray-200 relative overflow-hidden">
+                                <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg" alt="Event" class="w-full h-full object-cover">
+                                <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-semibold text-gray-900 flex items-center gap-1">
+                                    <iconify-icon icon="solar:code-bold" class="text-purple-500"></iconify-icon> Tech
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="text-base font-semibold text-gray-900 mb-1 leading-tight">Hackathon 2024</h4>
+                                <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                                    <span class="flex items-center gap-1"><iconify-icon icon="solar:clock-circle-linear"></iconify-icon> 24 Hours</span>
+                                    <span class="flex items-center gap-1"><iconify-icon icon="solar:map-point-linear"></iconify-icon> CS Block</span>
+                                </div>
+                                <button class="w-full py-2.5 bg-gray-50 hover:bg-primary-50 text-gray-900 hover:text-primary-600 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 border border-gray-100">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explore Grid -->
+                <div class="px-4 mb-8">
+                    <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">Explore</h3>
+                    <div class="grid grid-cols-4 gap-3">
+                        <div class="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div class="w-16 h-16 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 group-active:scale-95 transition-transform border border-purple-100">
+                                <iconify-icon icon="solar:music-note-linear" width="28" stroke-width="1.5"></iconify-icon>
+                            </div>
+                            <span class="text-xs font-medium text-gray-600">Music</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div class="w-16 h-16 rounded-2xl bg-cyan-50 flex items-center justify-center text-cyan-600 group-active:scale-95 transition-transform border border-cyan-100">
+                                <iconify-icon icon="solar:laptop-minimalistic-linear" width="28" stroke-width="1.5"></iconify-icon>
+                            </div>
+                            <span class="text-xs font-medium text-gray-600">Tech</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div class="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-600 group-active:scale-95 transition-transform border border-orange-100">
+                                <iconify-icon icon="solar:hamburger-menu-linear" width="28" stroke-width="1.5"></iconify-icon>
+                            </div>
+                            <span class="text-xs font-medium text-gray-600">Food</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div class="w-16 h-16 rounded-2xl bg-green-50 flex items-center justify-center text-green-600 group-active:scale-95 transition-transform border border-green-100">
+                                <iconify-icon icon="solar:gamepad-linear" width="28" stroke-width="1.5"></iconify-icon>
+                            </div>
+                            <span class="text-xs font-medium text-gray-600">Games</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="px-4 mb-8">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col justify-between h-28 active:scale-[0.98] transition-transform">
+                            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <iconify-icon icon="solar:calendar-add-linear" width="18"></iconify-icon>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-900">My Schedule</h4>
+                                <p class="text-[10px] text-gray-500 font-medium mt-0.5">3 events saved</p>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col justify-between h-28 active:scale-[0.98] transition-transform">
+                            <div class="w-8 h-8 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center">
+                                <iconify-icon icon="solar:map-arrow-square-linear" width="18"></iconify-icon>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-900">Venue Map</h4>
+                                <p class="text-[10px] text-gray-500 font-medium mt-0.5">Navigate campus</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trending List -->
+                <div class="px-4 pb-4">
+                    <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">Trending Now</h3>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm active:bg-gray-50 transition-colors">
+                            <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&amp;fit=crop&amp;q=80&amp;w=150" class="w-16 h-16 rounded-lg object-cover">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="text-sm font-semibold text-gray-900 truncate">Robotics Workshop</h4>
+                                    <span class="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">Free</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1 truncate">Learn to build basic bots</p>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <div class="flex -space-x-1.5">
+                                        <div class="w-5 h-5 rounded-full bg-gray-200 border border-white"></div>
+                                        <div class="w-5 h-5 rounded-full bg-gray-300 border border-white"></div>
+                                        <div class="w-5 h-5 rounded-full bg-gray-400 border border-white"></div>
+                                    </div>
+                                    <span class="text-[10px] text-gray-400 font-medium">+124 going</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm active:bg-gray-50 transition-colors">
+                            <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&amp;fit=crop&amp;q=80&amp;w=150" class="w-16 h-16 rounded-lg object-cover">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="text-sm font-semibold text-gray-900 truncate">DJ Night Finale</h4>
+                                    <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">Filling Fast</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1 truncate">Featuring DJ Snake (Local)</p>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <div class="flex -space-x-1.5">
+                                        <div class="w-5 h-5 rounded-full bg-gray-200 border border-white"></div>
+                                        <div class="w-5 h-5 rounded-full bg-gray-300 border border-white"></div>
+                                        <div class="w-5 h-5 rounded-full bg-gray-400 border border-white"></div>
+                                    </div>
+                                    <span class="text-[10px] text-gray-400 font-medium">+850 going</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. SCHEDULE SECTION (Hidden by default) -->
+            <div id="view-schedule" class="hidden animate-fade-in">
+                
+                <!-- Sticky Date Header -->
+                <div class="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+                    <div class="flex items-center justify-around px-2 pt-2 pb-0">
+                        <button class="flex-1 pb-3 text-center border-b-2 border-primary-500 text-primary-600 font-semibold text-sm">
+                            Day 1 <span class="block text-xs font-normal opacity-80">Mar 15</span>
+                        </button>
+                        <button class="flex-1 pb-3 text-center border-b-2 border-transparent text-gray-500 font-medium text-sm hover:text-gray-700">
+                            Day 2 <span class="block text-xs font-normal opacity-80">Mar 16</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Chips -->
+                <div class="py-4 px-4 flex gap-2 overflow-x-auto no-scrollbar">
+                    <button class="px-4 py-1.5 bg-gray-900 text-white rounded-full text-xs font-medium whitespace-nowrap">All Events</button>
+                    <button class="px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-xs font-medium whitespace-nowrap">Technical</button>
+                    <button class="px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-xs font-medium whitespace-nowrap">Cultural</button>
+                    <button class="px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-xs font-medium whitespace-nowrap">Workshops</button>
+                </div>
+
+                <!-- Timeline -->
+                <div class="px-4 pb-8 relative">
+                    <!-- Vertical Line -->
+                    <div class="absolute left-[60px] top-0 bottom-0 w-px bg-gray-200"></div>
+
+                    <!-- 9:00 AM -->
+                    <div class="flex mb-6 group">
+                        <div class="w-12 text-xs font-semibold text-gray-400 text-right pr-4 pt-1 font-mono">09:00</div>
+                        <div class="flex-1 bg-blue-50/50 border-l-4 border-blue-500 rounded-r-xl p-3 shadow-sm active:scale-[0.98] transition-transform">
+                            <h4 class="text-sm font-semibold text-gray-900">Inauguration Ceremony</h4>
+                            <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                <iconify-icon icon="solar:map-point-linear"></iconify-icon> Auditorium
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 10:30 AM -->
+                    <div class="flex mb-6 group">
+                        <div class="w-12 text-xs font-semibold text-gray-400 text-right pr-4 pt-1 font-mono">10:30</div>
+                        <div class="flex-1 bg-purple-50/50 border-l-4 border-purple-500 rounded-r-xl p-3 shadow-sm active:scale-[0.98] transition-transform">
+                            <h4 class="text-sm font-semibold text-gray-900">Battle of Bands</h4>
+                            <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                <iconify-icon icon="solar:map-point-linear"></iconify-icon> Open Air Theatre
+                            </p>
+                            <div class="mt-2 flex -space-x-1">
+                                <img src="https://i.pravatar.cc/100?img=1" class="w-5 h-5 rounded-full border border-white">
+                                <img src="https://i.pravatar.cc/100?img=2" class="w-5 h-5 rounded-full border border-white">
+                                <img src="https://i.pravatar.cc/100?img=3" class="w-5 h-5 rounded-full border border-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 01:00 PM -->
+                    <div class="flex mb-6 group">
+                        <div class="w-12 text-xs font-semibold text-gray-400 text-right pr-4 pt-1 font-mono">13:00</div>
+                        <div class="flex-1 bg-orange-50/50 border-l-4 border-orange-500 rounded-r-xl p-3 shadow-sm active:scale-[0.98] transition-transform">
+                            <h4 class="text-sm font-semibold text-gray-900">Food Fest Opening</h4>
+                            <p class="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                <iconify-icon icon="solar:map-point-linear"></iconify-icon> Ground B
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 03:00 PM (Conflict) -->
+                    <div class="flex mb-6 group">
+                        <div class="w-12 text-xs font-semibold text-gray-400 text-right pr-4 pt-1 font-mono">15:00</div>
+                        <div class="flex gap-2 flex-1 overflow-x-auto no-scrollbar">
+                            <div class="min-w-[140px] bg-green-50/50 border-l-4 border-green-500 rounded-r-xl p-3 shadow-sm active:scale-[0.98] transition-transform">
+                                <h4 class="text-sm font-semibold text-gray-900 truncate">Coding Marathon</h4>
+                                <p class="text-xs text-gray-500 mt-1">Lab 3</p>
+                            </div>
+                            <div class="min-w-[140px] bg-pink-50/50 border-l-4 border-pink-500 rounded-r-xl p-3 shadow-sm active:scale-[0.98] transition-transform">
+                                <h4 class="text-sm font-semibold text-gray-900 truncate">Dance Solo</h4>
+                                <p class="text-xs text-gray-500 mt-1">Main Stage</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. STALLS SECTION (Hidden by default) -->
+            <div id="view-stalls" class="hidden animate-fade-in">
+                <div class="px-4 py-4">
+                    <div class="flex items-center gap-2 mb-6 overflow-x-auto no-scrollbar">
+                        <button class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium">
+                            <iconify-icon icon="solar:filter-linear"></iconify-icon> Filter
+                        </button>
+                        <div class="h-4 w-px bg-gray-300 mx-1"></div>
+                        <button class="px-3 py-1.5 bg-secondary-100 text-secondary-700 border border-secondary-200 rounded-lg text-xs font-semibold">Food</button>
+                        <button class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-medium">Merch</button>
+                        <button class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-medium">Gaming</button>
+                    </div>
+
+                    <div class="columns-2 gap-4 space-y-4">
+                        <!-- Stall 1 -->
+                        <div class="break-inside-avoid bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden group">
+                            <div class="relative">
+                                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&amp;fit=crop&amp;q=80&amp;w=300" class="w-full h-32 object-cover">
+                                <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Pizza</div>
+                            </div>
+                            <div class="p-3">
+                                <h4 class="text-sm font-semibold text-gray-900 leading-tight">Cheezy Bites</h4>
+                                <p class="text-[10px] text-gray-500 mt-1 truncate">Stall #12 • Central Lawn</p>
+                                <div class="mt-2 flex items-center justify-between">
+                                    <div class="flex text-yellow-400 text-[10px]">
+                                        <iconify-icon icon="solar:star-bold"></iconify-icon>
+                                        <span class="text-gray-500 ml-1 font-medium">4.8</span>
+                                    </div>
+                                    <button class="w-6 h-6 rounded-full bg-secondary-50 text-secondary-600 flex items-center justify-center">
+                                        <iconify-icon icon="solar:map-arrow-right-linear" width="14"></iconify-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stall 2 -->
+                        <div class="break-inside-avoid bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden group">
+                            <div class="relative">
+                                <img src="https://images.unsplash.com/photo-1555529733-0e670560f7e1?auto=format&amp;fit=crop&amp;q=80&amp;w=300" class="w-full h-40 object-cover">
+                                <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Drink</div>
+                            </div>
+                            <div class="p-3">
+                                <h4 class="text-sm font-semibold text-gray-900 leading-tight">Bubble Tea Co.</h4>
+                                <p class="text-[10px] text-gray-500 mt-1 truncate">Stall #04 • Food Court</p>
+                            </div>
+                        </div>
+
+                        <!-- Stall 3 -->
+                        <div class="break-inside-avoid bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden group">
+                            <div class="relative">
+                                <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&amp;fit=crop&amp;q=80&amp;w=300" class="w-full h-32 object-cover">
+                                <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Merch</div>
+                            </div>
+                            <div class="p-3">
+                                <h4 class="text-sm font-semibold text-gray-900 leading-tight">Fest Hoodies</h4>
+                                <p class="text-[10px] text-gray-500 mt-1 truncate">Stall #21 • Main Entry</p>
+                            </div>
+                        </div>
+
+                         <!-- Stall 4 -->
+                         <div class="break-inside-avoid bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden group">
+                            <div class="relative">
+                                <img src="https://images.unsplash.com/photo-1627398242454-45a1465c2479?auto=format&amp;fit=crop&amp;q=80&amp;w=300" class="w-full h-28 object-cover">
+                                <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Fun</div>
+                            </div>
+                            <div class="p-3">
+                                <h4 class="text-sm font-semibold text-gray-900 leading-tight">VR Zone</h4>
+                                <p class="text-[10px] text-gray-500 mt-1 truncate">Stall #08 • Tech Hall</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. PROFILE SECTION (Hidden by default) -->
+            <div id="view-profile" class="hidden animate-fade-in">
+                <div class="p-4 pt-8 text-center">
+                    <div class="w-24 h-24 mx-auto rounded-full p-1 bg-gradient-to-tr from-primary-400 to-secondary-400 mb-3">
+                        <img src="https://i.pravatar.cc/300" class="w-full h-full rounded-full border-4 border-white object-cover">
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900">Alex Brown</h2>
+                    <p class="text-sm text-gray-500 font-medium">Computer Science • Year 3</p>
+                    
+                    <div class="grid grid-cols-3 gap-3 mt-6 mb-8">
+                        <div class="p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                            <div class="text-xl font-bold text-gray-900">12</div>
+                            <div class="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Events</div>
+                        </div>
+                        <div class="p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                            <div class="text-xl font-bold text-gray-900">8</div>
+                            <div class="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Saved</div>
+                        </div>
+                        <div class="p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                            <div class="text-xl font-bold text-gray-900">450</div>
+                            <div class="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Points</div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 text-left">
+                        <button class="w-full p-4 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                                    <iconify-icon icon="solar:ticket-linear" width="18"></iconify-icon>
+                                </div>
+                                <span class="font-semibold text-sm text-gray-700">My Tickets</span>
+                            </div>
+                            <iconify-icon icon="solar:alt-arrow-right-linear" class="text-gray-400"></iconify-icon>
+                        </button>
+                        
+                        <button class="w-full p-4 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center">
+                                    <iconify-icon icon="solar:bookmark-linear" width="18"></iconify-icon>
+                                </div>
+                                <span class="font-semibold text-sm text-gray-700">Saved Events</span>
+                            </div>
+                            <iconify-icon icon="solar:alt-arrow-right-linear" class="text-gray-400"></iconify-icon>
+                        </button>
+                        
+                        <button class="w-full p-4 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center">
+                                    <iconify-icon icon="solar:settings-linear" width="18"></iconify-icon>
+                                </div>
+                                <span class="font-semibold text-sm text-gray-700">Settings</span>
+                            </div>
+                            <iconify-icon icon="solar:alt-arrow-right-linear" class="text-gray-400"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <button class="mt-8 text-sm font-semibold text-red-500 py-2">Sign Out</button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="absolute bottom-0 w-full h-16 bg-white border-t border-gray-100 flex justify-around items-center px-2 z-50 pb-safe">
+            
+            <button onclick="switchTab('home')" id="nav-home" class="group flex flex-col items-center gap-1 p-2 w-16 text-primary-600 transition-all">
+                <div class="relative transition-transform duration-200 group-active:scale-90">
+                    <iconify-icon icon="solar:home-smile-bold" width="24" class="block group-[.active]:hidden transition-all"></iconify-icon>
+                    <!-- Swap icon via JS logic or just use CSS classes -->
+                </div>
+                <span class="text-[10px] font-bold tracking-tight">Home</span>
+            </button>
+            
+            <button onclick="switchTab('schedule')" id="nav-schedule" class="group flex flex-col items-center gap-1 p-2 w-16 text-gray-400 hover:text-gray-600 transition-all">
+                <div class="relative transition-transform duration-200 group-active:scale-90">
+                    <iconify-icon icon="solar:calendar-linear" width="24"></iconify-icon>
+                </div>
+                <span class="text-[10px] font-medium tracking-tight">Schedule</span>
+            </button>
+            
+            <button onclick="switchTab('stalls')" id="nav-stalls" class="group flex flex-col items-center gap-1 p-2 w-16 text-gray-400 hover:text-gray-600 transition-all">
+                <div class="relative transition-transform duration-200 group-active:scale-90">
+                    <iconify-icon icon="solar:shop-linear" width="24"></iconify-icon>
+                </div>
+                <span class="text-[10px] font-medium tracking-tight">Stalls</span>
+            </button>
+            
+            <button onclick="switchTab('profile')" id="nav-profile" class="group flex flex-col items-center gap-1 p-2 w-16 text-gray-400 hover:text-gray-600 transition-all">
+                <div class="relative transition-transform duration-200 group-active:scale-90">
+                    <iconify-icon icon="solar:user-circle-linear" width="24"></iconify-icon>
+                </div>
+                <span class="text-[10px] font-medium tracking-tight">Profile</span>
+            </button>
+
+        </nav>
+        
+        <!-- FAB (Floating Action Button) for Admin/Organizer - Optional -->
+        <button class="absolute bottom-20 right-4 w-12 h-12 bg-gradient-to-tr from-secondary-500 to-secondary-600 rounded-full shadow-lg text-white flex items-center justify-center active:scale-90 transition-transform z-40">
+            <iconify-icon icon="solar:add-circle-linear" width="24" stroke-width="2"></iconify-icon>
+        </button>
+
+    </div>
+
+    <script>
+        const tabs = ['home', 'schedule', 'stalls', 'profile'];
+        
+        function switchTab(activeTab) {
+            // Scroll to top
+            document.getElementById('main-scroll').scrollTop = 0;
+
+            tabs.forEach(tab => {
+                const view = document.getElementById(`view-${tab}`);
+                const nav = document.getElementById(`nav-${tab}`);
+                const icon = nav.querySelector('iconify-icon');
+                const label = nav.querySelector('span');
+
+                if (tab === activeTab) {
+                    // Show View
+                    view.classList.remove('hidden');
+                    
+                    // Update Nav Styles
+                    nav.classList.remove('text-gray-400');
+                    nav.classList.add('text-primary-600');
+                    
+                    // Update Font Weight
+                    label.classList.remove('font-medium');
+                    label.classList.add('font-bold');
+
+                    // Update Icon to Bold variant
+                    let iconName = icon.getAttribute('icon');
+                    if (iconName.includes('-linear')) {
+                        icon.setAttribute('icon', iconName.replace('-linear', '-bold'));
+                    }
+                } else {
+                    // Hide View
+                    view.classList.add('hidden');
+                    
+                    // Update Nav Styles
+                    nav.classList.add('text-gray-400');
+                    nav.classList.remove('text-primary-600');
+                    
+                    // Update Font Weight
+                    label.classList.add('font-medium');
+                    label.classList.remove('font-bold');
+
+                    // Update Icon to Linear variant
+                    let iconName = icon.getAttribute('icon');
+                    if (iconName.includes('-bold')) {
+                        icon.setAttribute('icon', iconName.replace('-bold', '-linear'));
+                    } else if (!iconName.includes('-linear')) {
+                         // Fallback for initial state if manually set
+                         // Assuming initial state is linear for non-active
+                    }
+                }
+            });
+        }
+
+        // Initialize Icons correctly based on default HTML state
+        // Home is default active
+        const homeIcon = document.querySelector('#nav-home iconify-icon');
+        homeIcon.setAttribute('icon', 'solar:home-smile-bold');
+    </script>
+
+</body></html>

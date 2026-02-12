@@ -1,71 +1,46 @@
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
+import AppLayout from '@/layouts/AppLayout'
+import LoadingSpinner from '@/components/ui/loading-spinner'
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
-import { AuthProvider } from "@/contexts/AuthContext";
-import Layout from "./components/layout/Layout";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import Index from "./pages/Index";
-import EventDetail from "./pages/EventDetail";
-import Map from "./pages/Map";
-import Timeline from "./pages/Timeline";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Profile from "./pages/Profile";
-import CreateEvent from "./pages/CreateEvent";
-import AdminDashboard from "./pages/AdminDashboard";
-import FestivalUpdates from "./pages/FestivalUpdates";
-import NotFound from "./pages/NotFound";
+// Lazy-loaded pages
+const HomePage = lazy(() => import('@/pages/HomePage'))
+const SchedulePage = lazy(() => import('@/pages/SchedulePage'))
+const StallsPage = lazy(() => import('@/pages/StallsPage'))
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
+const EventDetailPage = lazy(() => import('@/pages/EventDetailPage'))
+const LoginPage = lazy(() => import('@/pages/LoginPage'))
 
-// Create new query client
-const queryClient = new QueryClient();
+function App() {
+    return (
+        <BrowserRouter>
+            <Toaster
+                position="top-center"
+                toastOptions={{
+                    duration: 3000,
+                    style: {
+                        borderRadius: '12px',
+                        padding: '12px 16px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                    },
+                }}
+            />
+            <Suspense fallback={<LoadingSpinner fullScreen />}>
+                <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route element={<AppLayout />}>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/schedule" element={<SchedulePage />} />
+                        <Route path="/stalls" element={<StallsPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/events/:id" element={<EventDetailPage />} />
+                    </Route>
+                </Routes>
+            </Suspense>
+        </BrowserRouter>
+    )
+}
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <Layout>
-            <AnimatePresence mode="wait">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/event/:id" element={<EventDetail />} />
-                <Route path="/map" element={<Map />} />
-                <Route path="/timeline" element={<Timeline />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/updates" element={<FestivalUpdates />} />
-                
-                {/* Protected Routes */}
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                } />
-                <Route path="/create-event" element={
-                  <ProtectedRoute requiredRole="organizer">
-                    <CreateEvent />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin" element={
-                  <ProtectedRoute requiredRole="admin">
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AnimatePresence>
-          </Layout>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
-export default App;
+export default App
