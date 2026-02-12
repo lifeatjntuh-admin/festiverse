@@ -1,31 +1,15 @@
-// ===== Fest Config =====
-export interface FestConfig {
-    id: string
-    fest_name: string
-    fest_start: string
-    fest_end: string
-    is_initialized: boolean
-    super_admin_id: string | null
-    created_at: string
-    updated_at: string
-}
-
-// ===== Roles =====
-export type EventRole = 'owner' | 'member' | null
-export type StallRole = 'owner' | 'member' | null
-export type AttendeeOrigin = 'internal' | 'external'
-export type AttendeeType = 'student' | 'non_student'
-
+// ===== Profile Roles =====
 export interface ProfileRoles {
-    is_super_admin: boolean
-    is_admin: boolean
-    event_role: EventRole
-    stall_role: StallRole
+    is_organizer: boolean
+    is_stall_owner: boolean
+    organized_events: string[]
+    owned_stalls: string[]
 }
 
-export interface AttendeeInfo {
-    origin: AttendeeOrigin
-    type: AttendeeType
+export interface ProfilePreferences {
+    email_reminders: boolean
+    push_notifications: boolean
+    theme: 'light' | 'dark'
 }
 
 // ===== Profile =====
@@ -33,44 +17,63 @@ export interface Profile {
     id: string
     email: string
     name: string
+    college_id: string | null
+    department: string | null
+    phone: string | null
     avatar_url: string | null
-    bio: string | null
-    college: string | null
     roles: ProfileRoles
-    attendee_info: AttendeeInfo | null
+    preferences: ProfilePreferences
     created_at: string
     updated_at: string
 }
 
 // ===== Events =====
 export type EventCategory =
-    | 'music'
-    | 'tech'
-    | 'food'
-    | 'games'
-    | 'cultural'
-    | 'sports'
     | 'workshop'
     | 'competition'
+    | 'cultural'
+    | 'tech'
+    | 'sports'
+    | 'food'
+
+export interface VenueDetails {
+    building?: string
+    room?: string
+    floor?: number
+    capacity?: number
+}
+
+export interface OrganizerContact {
+    email?: string
+    phone?: string
+    whatsapp?: string
+}
 
 export interface Event {
     id: string
     title: string
     description: string | null
     category: EventCategory
+    department: string | null
     start_time: string
     end_time: string
     location: string
-    venue_details: Record<string, unknown> | null
+    venue_details: VenueDetails | null
     image_url: string | null
+    images: string[] | null
     organizer_id: string
+    organizer_contact: OrganizerContact | null
+    registration_required: boolean
+    registration_link: string | null
     max_participants: number | null
-    registration_count: number
-    is_featured: boolean
-    is_free: boolean
-    entry_fee: number | null
+    current_registrations: number
+    is_paid: boolean
+    price: number | null
     tags: string[]
-    status: 'draft' | 'published' | 'cancelled'
+    rules: string | null
+    is_featured: boolean
+    is_published: boolean
+    featured_order: number | null
     created_at: string
     updated_at: string
     // Joined fields
@@ -80,7 +83,21 @@ export interface Event {
 }
 
 // ===== Stalls =====
-export type StallCategory = 'food' | 'merch' | 'gaming' | 'clubs' | 'sponsors'
+export type StallCategory = 'food' | 'merchandise' | 'club' | 'sponsor'
+
+export interface MenuItem {
+    name: string
+    price: number
+    image_url?: string
+    description?: string
+    available: boolean
+}
+
+export interface MapCoordinates {
+    x: number
+    y: number
+    zone?: string
+}
 
 export interface Stall {
     id: string
@@ -88,12 +105,13 @@ export interface Stall {
     description: string | null
     category: StallCategory
     location: string
-    image_url: string | null
+    map_coordinates: MapCoordinates | null
+    images: string[]
     owner_id: string
-    rating: number | null
-    is_featured: boolean
-    tags: string[]
-    status: 'draft' | 'published'
+    contact_info: OrganizerContact | null
+    menu_items: MenuItem[] | null
+    is_active: boolean
+    featured_position: number | null
     created_at: string
     updated_at: string
     // Joined
@@ -104,30 +122,39 @@ export interface Stall {
 export interface Bookmark {
     id: string
     user_id: string
-    event_id: string
+    event_id: string | null
+    stall_id: string | null
+    type: 'event' | 'stall'
     created_at: string
 }
 
 // ===== Registrations =====
 export interface EventRegistration {
     id: string
-    user_id: string
     event_id: string
-    status: 'confirmed' | 'waitlisted' | 'cancelled'
+    user_id: string
+    registration_data: Record<string, unknown> | null
+    payment_status: 'pending' | 'completed' | 'failed'
+    payment_id: string | null
+    checked_in: boolean
+    checked_in_at: string | null
     created_at: string
 }
 
 // ===== Notifications =====
-export type NotificationType = 'event_reminder' | 'registration' | 'announcement' | 'system'
+export type NotificationType = 'event_reminder' | 'event_update' | 'announcement' | 'registration_confirmed'
 
 export interface Notification {
     id: string
     user_id: string
     title: string
-    body: string
+    message: string
     type: NotificationType
+    related_event_id: string | null
+    related_stall_id: string | null
+    action_url: string | null
     is_read: boolean
-    data: Record<string, unknown> | null
+    read_at: string | null
     created_at: string
 }
 
@@ -135,9 +162,11 @@ export interface Notification {
 export interface Announcement {
     id: string
     title: string
-    body: string
-    author_id: string
-    is_pinned: boolean
+    content: string
+    priority: 'urgent' | 'normal' | 'info'
+    visible_from: string
+    visible_until: string | null
+    created_by: string | null
     created_at: string
 }
 
