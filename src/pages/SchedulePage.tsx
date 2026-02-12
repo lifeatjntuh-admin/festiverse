@@ -1,15 +1,41 @@
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { useEventsByDay } from '@/lib/useData'
+import { format } from 'date-fns'
 
 const DAYS = ['day1', 'day2'] as const
 const FILTERS = ['allEvents', 'technical', 'cultural', 'workshops'] as const
+
+// Map schedule filter to DB categories
+const FILTER_CATEGORY_MAP: Record<string, string | null> = {
+    allEvents: null,
+    technical: 'competition',
+    cultural: 'cultural',
+    workshops: 'workshop',
+}
+
+const TAG_COLORS: Record<string, string> = {
+    cultural: 'text-purple-600 bg-purple-50',
+    workshop: 'text-blue-600 bg-blue-50',
+    competition: 'text-red-600 bg-red-50',
+    sports: 'text-green-600 bg-green-50',
+    food: 'text-orange-600 bg-orange-50',
+}
 
 export default function SchedulePage() {
     const { t } = useTranslation()
     const [activeDay, setActiveDay] = useState<typeof DAYS[number]>('day1')
     const [activeFilter, setActiveFilter] = useState<typeof FILTERS[number]>('allEvents')
+
+    const { events, loading } = useEventsByDay(activeDay)
+
+    // Filter events by category
+    const filteredEvents = activeFilter === 'allEvents'
+        ? events
+        : events.filter((e) => e.category === FILTER_CATEGORY_MAP[activeFilter])
 
     return (
         <div className="animate-fade-in">
@@ -51,33 +77,56 @@ export default function SchedulePage() {
 
             {/* Timeline */}
             <div className="px-4 mt-2">
-                <div className="relative pl-6 border-l-2 border-gray-200 space-y-6">
-                    {[
-                        { time: '9:00 AM', title: 'Opening Ceremony', venue: 'Main Stage', tag: 'Cultural' },
-                        { time: '10:30 AM', title: 'AI & ML Workshop', venue: 'CS Block', tag: 'Tech' },
-                        { time: '12:00 PM', title: 'Band Performance', venue: 'Open Arena', tag: 'Music' },
-                        { time: '2:00 PM', title: 'Hackathon Kickoff', venue: 'Innovation Hub', tag: 'Tech' },
-                        { time: '4:00 PM', title: 'Dance Battle', venue: 'Auditorium', tag: 'Cultural' },
-                    ].map(({ time, title, venue, tag }) => (
-                        <div key={time} className="relative">
-                            {/* Timeline dot */}
-                            <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-primary-500 border-2 border-white" />
-                            <div className="text-xs text-gray-400 font-mono mb-2">{time}</div>
-                            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors cursor-pointer">
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
-                                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                                            <Icon icon="solar:map-point-linear" width={14} />
-                                            <span>{venue}</span>
-                                        </div>
-                                    </div>
-                                    <span className="text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">{tag}</span>
+                {loading ? (
+                    <div className="relative pl-6 border-l-2 border-gray-200 space-y-6">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="relative">
+                                <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-gray-200 border-2 border-white" />
+                                <div className="h-3 w-16 bg-gray-100 rounded mb-2 animate-pulse" />
+                                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 space-y-2">
+                                    <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
+                                    <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2" />
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                ) : filteredEvents.length === 0 ? (
+                    <div className="text-center py-12">
+                        <Icon icon="solar:calendar-search-linear" className="text-gray-300 mx-auto mb-3" width={48} />
+                        <p className="text-sm text-gray-400 font-medium">No events for this filter</p>
+                    </div>
+                ) : (
+                    <div className="relative pl-6 border-l-2 border-gray-200 space-y-6">
+                        {filteredEvents.map((event) => (
+                            <Link to={`/events/${event.id}`} key={event.id} className="relative block">
+                                <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-primary-500 border-2 border-white" />
+                                <div className="text-xs text-gray-400 font-mono mb-2">
+                                    {format(new Date(event.start_time), 'h:mm a')}
+                                </div>
+                                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-sm font-semibold text-gray-900">{event.title}</h4>
+                                            <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                                                <Icon icon="solar:map-point-linear" width={14} />
+                                                <span>{event.location}</span>
+                                            </div>
+                                            {event.end_time && (
+                                                <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
+                                                    <Icon icon="solar:clock-circle-linear" width={14} />
+                                                    <span>{format(new Date(event.start_time), 'h:mm a')} – {format(new Date(event.end_time), 'h:mm a')}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ml-2 ${TAG_COLORS[event.category] || 'text-primary-600 bg-primary-50'}`}>
+                                            {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     )

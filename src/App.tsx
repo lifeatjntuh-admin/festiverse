@@ -12,6 +12,7 @@ const StallsPage = lazy(() => import('@/pages/StallsPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
 const EventDetailPage = lazy(() => import('@/pages/EventDetailPage'))
 const LoginPage = lazy(() => import('@/pages/LoginPage'))
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
 /**
  * Auth guard for deep pages: redirects to /login if not authenticated
@@ -100,8 +101,8 @@ function App() {
                         />
                     </Route>
 
-                    {/* Catch-all */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
+                    {/* 404 catch-all */}
+                    <Route path="*" element={<NotFoundPage />} />
                 </Routes>
             </Suspense>
         </BrowserRouter>
