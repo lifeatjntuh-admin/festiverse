@@ -1,13 +1,15 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '@iconify/react'
+import { useState } from 'react'
 import { useAuthStore } from '@/lib/useAuthStore'
 import toast from 'react-hot-toast'
 
 export default function ProfilePage() {
     const { t } = useTranslation()
     const navigate = useNavigate()
-    const { user, profile, signInWithGoogle, signOut, isLoading } = useAuthStore()
+    const { user, profile, signInWithGoogle, signOut, deleteAccount, isLoading } = useAuthStore()
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
     const isLoggedIn = !!user
 
@@ -140,16 +142,56 @@ export default function ProfilePage() {
                     </button>
                 </div>
 
-                {/* Sign Out Button (only when logged in) */}
                 {isLoggedIn && (
-                    <button
-                        onClick={handleSignOut}
-                        disabled={isLoading}
-                        className="mt-8 w-full p-4 bg-red-50 hover:bg-red-100 rounded-xl border border-red-100 flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] disabled:opacity-60"
-                    >
-                        <Icon icon="solar:logout-2-linear" width={18} className="text-red-500" />
-                        <span className="text-sm font-semibold text-red-500">{t('profile.signOut')}</span>
-                    </button>
+                    <>
+                        <button
+                            onClick={handleSignOut}
+                            disabled={isLoading}
+                            className="mt-8 w-full p-4 bg-red-50 hover:bg-red-100 rounded-xl border border-red-100 flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] disabled:opacity-60"
+                        >
+                            <Icon icon="solar:logout-2-linear" width={18} className="text-red-500" />
+                            <span className="text-sm font-semibold text-red-500">{t('profile.signOut')}</span>
+                        </button>
+
+                        {/* Delete Account */}
+                        {!showDeleteConfirm ? (
+                            <button
+                                onClick={() => setShowDeleteConfirm(true)}
+                                className="mt-3 w-full py-2 text-xs font-medium text-gray-400 hover:text-red-400 transition-colors"
+                            >
+                                Delete my account
+                            </button>
+                        ) : (
+                            <div className="mt-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                                <p className="text-sm text-red-700 font-medium mb-3">
+                                    Are you sure? Your profile and data will be deactivated.
+                                </p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await deleteAccount()
+                                                toast.success('Account deleted')
+                                                navigate('/', { replace: true })
+                                            } catch {
+                                                toast.error('Failed to delete account')
+                                            }
+                                        }}
+                                        disabled={isLoading}
+                                        className="flex-1 py-2.5 bg-red-500 text-white rounded-lg text-sm font-semibold disabled:opacity-60"
+                                    >
+                                        {isLoading ? 'Deleting...' : 'Yes, delete'}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowDeleteConfirm(false)}
+                                        className="flex-1 py-2.5 bg-white text-gray-600 rounded-lg text-sm font-semibold border border-gray-200"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

@@ -14,22 +14,7 @@ const EventDetailPage = lazy(() => import('@/pages/EventDetailPage'))
 const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
-/**
- * Auth guard for deep pages: redirects to /login if not authenticated
- */
-function RequireAuth({ children }: { children: React.ReactNode }) {
-    const { user, isLoading, isInitialized } = useAuthStore()
 
-    if (!isInitialized || isLoading) {
-        return <LoadingSpinner fullScreen />
-    }
-
-    if (!user) {
-        return <Navigate to="/login" replace />
-    }
-
-    return <>{children}</>
-}
 
 /**
  * Guest guard: redirects to / if already authenticated
@@ -90,15 +75,8 @@ function App() {
                         <Route path="/stalls" element={<StallsPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
 
-                        {/* Deeper pages — login required */}
-                        <Route
-                            path="/events/:id"
-                            element={
-                                <RequireAuth>
-                                    <EventDetailPage />
-                                </RequireAuth>
-                            }
-                        />
+                        {/* Event detail — public viewing, login prompted for actions */}
+                        <Route path="/events/:id" element={<EventDetailPage />} />
                     </Route>
 
                     {/* 404 catch-all */}

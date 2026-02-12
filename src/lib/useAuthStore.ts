@@ -8,6 +8,7 @@ import {
 import { auth, googleProvider } from './firebase'
 import { supabase } from './supabase'
 import type { Profile } from '@/types/database'
+import toast from 'react-hot-toast'
 
 interface AuthState {
     // State
@@ -22,6 +23,7 @@ interface AuthState {
     signInWithGoogle: () => Promise<void>
     signOut: () => Promise<void>
     updateProfile: (updates: Partial<Profile>) => Promise<void>
+    deleteAccount: () => Promise<void>
     clearError: () => void
 }
 
@@ -114,6 +116,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
     },
 
+    // Soft-delete account (flag in Supabase + sign out Firebase)
+    deleteAccount: async () => {
+        const { user } = get()
+        if (!user) return
+
+        set({ isLoading: true, error: null })
+        try {
+            // Flag as deleted in Supabase
+            const { error } = await supabase
+                .from('profiles')
+                .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+                .eq('id', user.uid)
+
+            if (error) throw error
+
+            // Sign out of Firebase
+            await firebaseSignOut(auth)
+            set({ user: null, profile: null, isLoading: false })
+        } catch (err) {
+            console.error('Failed to delete account:', err)
+            set({ isLoading: false, error: 'Failed to delete account' })
+            throw err
+        }
+    },
+
     clearError: () => set({ error: null }),
 }))
 
@@ -124,22 +151,62 @@ export const useAuthStore = create<AuthState>((set, get) => ({
  * Uses upsert to create on first login, update on subsequent logins.
  */
 async function syncProfile(firebaseUser: User): Promise<void> {
-    const { error } = await supabase.from('profiles').upsert(
-        {
-            id: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            name:
-                firebaseUser.displayName ||
-                firebaseUser.email?.split('@')[0] ||
-                'User',
-            avatar_url: firebaseUser.photoURL || null,
-        },
-        { onConflict: 'id' }
-    )
+    const { uid, email, displayName, photoURL } = firebaseUser
 
-    if (error) {
-        console.error('Profile sync error:', error)
-        throw error
+    // 1. Check if profile exists
+    const { data: existingProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('id, is_deleted')
+        .eq('id', uid)
+        .maybeSingle()
+
+    if (fetchError) {
+        console.error('Error checking profile existence:', fetchError)
+        throw fetchError
+    }
+
+    const payload = {
+        email: email || '',
+        name: displayName || email?.split('@')[0] || 'User',
+        avatar_url: photoURL || null,
+        is_deleted: false,
+        deleted_at: null,
+    }
+
+    if (existingProfile) {
+        // Check if account was previously deleted
+        const wasDeleted = existingProfile.is_deleted
+
+        // 2. Update existing profile
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update(payload)
+            .eq('id', uid)
+
+        if (updateError) {
+            console.error('Error updating profile:', updateError)
+            throw updateError
+        }
+
+        if (wasDeleted) {
+            toast.success('Welcome back! Your account has been recovered.', {
+                icon: '♻️',
+                duration: 5000,
+            })
+        }
+    } else {
+        // 3. Create new profile
+        const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+                id: uid,
+                ...payload,
+            })
+
+        if (insertError) {
+            console.error('Error creating profile:', insertError)
+            throw insertError
+        }
     }
 }
 
