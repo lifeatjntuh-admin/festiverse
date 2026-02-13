@@ -136,7 +136,7 @@ export default function ProfilePage() {
 
                     {/* Organizer/Manager Dashboard */}
                     {isLoggedIn && (profile?.roles?.some((r: string) => ['super_admin', 'app_admin', 'event_manager', 'stall_manager', 'team_member'].includes(r))) && (
-                        <button className="w-full p-4 bg-gradient-to-r from-orange-400 to-red-500 rounded-xl shadow-lg border border-white/20 flex items-center justify-between text-white active:scale-[0.99] transition-transform">
+                        <Link to="/organiser" className="w-full p-4 bg-gradient-to-r from-orange-400 to-red-500 rounded-xl shadow-lg border border-white/20 flex items-center justify-between text-white active:scale-[0.99] transition-transform">
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                                     <Icon icon="solar:widget-linear" width={18} />
@@ -147,7 +147,7 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                             <Icon icon="solar:alt-arrow-right-linear" />
-                        </button>
+                        </Link>
                     )}
 
                     {/* Request Role */}

@@ -11,6 +11,7 @@ const SchedulePage = lazy(() => import('@/pages/SchedulePage'))
 const StallsPage = lazy(() => import('@/pages/StallsPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'))
+const OrganiserTools = lazy(() => import('@/pages/organiser/OrganiserTools'))
 const EventDetailPage = lazy(() => import('@/pages/EventDetailPage'))
 const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
@@ -73,6 +74,7 @@ function App() {
 
                         {/* Admin Routes */}
                         <Route path="/admin" element={<AdminDashboard />} />
+                        <Route path="/organiser" element={<OrganiserTools />} />
 
                         {/* Event detail — public viewing, login prompted for actions */}
                         <Route path="/events/:id" element={<EventDetailPage />} />
