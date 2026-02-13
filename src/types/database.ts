@@ -123,6 +123,17 @@ export interface Stall {
     owner?: Profile
 }
 
+// ===== Team Members =====
+export interface EventTeamMember {
+    id: string
+    event_id: string
+    user_id: string
+    role: 'co_host' | 'member'
+    created_at: string
+    // Joined
+    profile?: Profile
+}
+
 // ===== Bookmarks =====
 export interface Bookmark {
     id: string

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from './supabase'
-import type { Event, Stall, Bookmark, EventRegistration, Profile } from '@/types/database'
+import type { Event, Stall, Bookmark, EventRegistration, Profile, UserRole } from '@/types/database'
 
 // ===== Events Hooks =====
 
@@ -363,25 +363,99 @@ export function useUserStats(userId: string | undefined) {
     return { stats, loading }
 }
 
+// ===== Profile Search =====
+
+// ===== Profile Search =====
+
+/** Search profiles by name or email (admin/manager only) */
+export function useSearchProfiles(query: string) {
+    const [profiles, setProfiles] = useState<Profile[]>([])
+    const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        if (!query || query.length < 2) {
+            setProfiles([])
+            return
+        }
+
+        const timeoutId = setTimeout(async () => {
+            setLoading(true)
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .or(`email.ilike.%${query}%,name.ilike.%${query}%`)
+                .limit(10)
+
+            if (error) {
+                console.error('Search failed:', error)
+            } else {
+                setProfiles((data ?? []) as Profile[])
+            }
+            setLoading(false)
+        }, 300)
+
+        return () => clearTimeout(timeoutId)
+    }, [query])
+
+    return { profiles, loading }
+}
+
 // ===== Organiser Hooks =====
 
-/** Fetch events owned by a specific user */
-export function useMyEvents(userId: string | undefined) {
+/** Fetch events owned by a specific user (or all if admin, or team events) */
+export function useMyEvents(userId: string | undefined, roles: UserRole[] = []) {
     const [events, setEvents] = useState<Event[]>([])
     const [loading, setLoading] = useState(true)
+
+    // Use a ref for roles to prevent deep dependency issues if roles array ref changes
+    const rolesRef = useRef(roles)
+    useEffect(() => { rolesRef.current = roles }, [roles])
 
     const refresh = useCallback(() => {
         if (!userId) { setLoading(false); return }
         setLoading(true)
-        supabase
-            .from('events')
-            .select('*')
-            .eq('organizer_id', userId)
-            .order('start_time', { ascending: true })
-            .then(({ data }) => {
-                setEvents((data ?? []) as Event[])
+
+        const isSuperAdmin = rolesRef.current.includes('super_admin') || rolesRef.current.includes('app_admin')
+
+        if (isSuperAdmin) {
+            supabase
+                .from('events')
+                .select('*')
+                .order('start_time', { ascending: true })
+                .then(({ data }) => {
+                    setEvents((data ?? []) as Event[])
+                    setLoading(false)
+                })
+        } else {
+            Promise.all([
+                // Owned events
+                supabase
+                    .from('events')
+                    .select('*')
+                    .eq('organizer_id', userId),
+                // Team events
+                supabase
+                    .from('event_team_members')
+                    .select('event_id, events(*)')
+                    .eq('user_id', userId)
+            ]).then(([ownedRes, teamRes]) => {
+                const owned = (ownedRes.data ?? []) as Event[]
+                const team = (teamRes.data ?? []).map((r: any) => r.events).filter(Boolean) as Event[]
+
+                // Deduplicate and sort
+                const combined = [...owned, ...team].reduce((acc, current) => {
+                    const x = acc.find(item => item.id === current.id);
+                    if (!x) {
+                        return acc.concat([current]);
+                    } else {
+                        return acc;
+                    }
+                }, [] as Event[]).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+
+                setEvents(combined)
                 setLoading(false)
             })
+        }
     }, [userId])
 
     useEffect(() => { refresh() }, [refresh])
@@ -389,19 +463,29 @@ export function useMyEvents(userId: string | undefined) {
     return { events, loading, refresh, setEvents }
 }
 
-/** Fetch stalls owned by a specific user */
-export function useMyStalls(userId: string | undefined) {
+/** Fetch stalls owned by a specific user (or all if admin) */
+export function useMyStalls(userId: string | undefined, roles: UserRole[] = []) {
     const [stalls, setStalls] = useState<Stall[]>([])
     const [loading, setLoading] = useState(true)
+
+    const rolesRef = useRef(roles)
+    useEffect(() => { rolesRef.current = roles }, [roles])
 
     const refresh = useCallback(() => {
         if (!userId) { setLoading(false); return }
         setLoading(true)
-        supabase
+
+        const isSuperAdmin = rolesRef.current.includes('super_admin') || rolesRef.current.includes('app_admin')
+
+        let query = supabase
             .from('stalls')
             .select('*')
-            .eq('owner_id', userId)
-            .order('created_at', { ascending: false })
+
+        if (!isSuperAdmin) {
+            query = query.eq('owner_id', userId)
+        }
+
+        query.order('created_at', { ascending: false })
             .then(({ data }) => {
                 setStalls((data ?? []) as Stall[])
                 setLoading(false)
@@ -514,9 +598,11 @@ export async function updateStall(stallId: string, updates: Partial<Stall>) {
     return { data: data as Stall | null, error }
 }
 
-/** Fetch team members for an event (profiles that have team_member role and are linked) */
+/** Fetch team members for an event */
+import type { EventTeamMember } from '@/types/database'
+
 export function useEventTeam(eventId: string | undefined) {
-    const [members, setMembers] = useState<Profile[]>([])
+    const [members, setMembers] = useState<EventTeamMember[]>([])
     const [loading, setLoading] = useState(true)
 
     const refresh = useCallback(() => {
@@ -524,15 +610,14 @@ export function useEventTeam(eventId: string | undefined) {
         setLoading(true)
         supabase
             .from('event_team_members')
-            .select('*, profiles:user_id(id, name, email, avatar_url, phone)')
+            .select('*, profile:user_id(*)')
             .eq('event_id', eventId)
             .then(({ data, error }) => {
                 if (error) {
-                    // Table might not exist yet
                     console.warn('event_team_members query failed:', error.message)
                     setMembers([])
                 } else {
-                    setMembers((data ?? []).map((r: any) => r.profiles).filter(Boolean))
+                    setMembers((data ?? []) as EventTeamMember[])
                 }
                 setLoading(false)
             })
@@ -540,20 +625,31 @@ export function useEventTeam(eventId: string | undefined) {
 
     useEffect(() => { refresh() }, [refresh])
 
-    const addMember = async (userId: string) => {
-        const { error } = await supabase
-            .from('event_team_members')
-            .insert({ event_id: eventId, user_id: userId })
+    const addMember = async (userId: string, role: 'co_host' | 'member' = 'member') => {
+        const executorId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
+
+        if (!executorId || !eventId) return { error: { message: 'Not authenticated or invalid event' } }
+
+        const { error } = await supabase.rpc('add_event_team_member', {
+            executor_id: executorId,
+            target_event_id: eventId,
+            target_user_id: userId,
+            target_role: role
+        })
         if (!error) refresh()
         return { error }
     }
 
     const removeMember = async (userId: string) => {
-        const { error } = await supabase
-            .from('event_team_members')
-            .delete()
-            .eq('event_id', eventId!)
-            .eq('user_id', userId)
+        const executorId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
+
+        if (!executorId || !eventId) return { error: { message: 'Not authenticated or invalid event' } }
+
+        const { error } = await supabase.rpc('remove_event_team_member', {
+            executor_id: executorId,
+            target_event_id: eventId,
+            target_user_id: userId
+        })
         if (!error) refresh()
         return { error }
     }

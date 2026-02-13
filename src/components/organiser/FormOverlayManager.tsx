@@ -1,6 +1,7 @@
 import { useFormStore } from '@/lib/useFormStore'
 import EventForm from '@/components/organiser/EventForm'
 import StallForm from '@/components/organiser/StallForm'
+import TeamManagerPanel from '@/components/organiser/TeamManagerPanel'
 
 export default function FormOverlayManager() {
     const { forms } = useFormStore()
@@ -36,6 +37,18 @@ export default function FormOverlayManager() {
                             formId={form.id}
                             stall={form.entity as any}
                             onSaved={form.onSaved}
+                            minimized={form.minimized}
+                            pillIndex={pillIndex}
+                        />
+                    )
+                }
+
+                if (form.type === 'team') {
+                    return (
+                        <TeamManagerPanel
+                            key={form.id}
+                            formId={form.id}
+                            event={form.entity as any}
                             minimized={form.minimized}
                             pillIndex={pillIndex}
                         />

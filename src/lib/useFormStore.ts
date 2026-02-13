@@ -1,9 +1,11 @@
 import { create } from 'zustand'
 import { Event, Stall } from '@/types/database'
 
+export type ActiveFormType = 'event' | 'stall' | 'team'
+
 export interface OpenFormState {
     id: string
-    type: 'event' | 'stall'
+    type: Exclude<ActiveFormType, null>
     entity: Event | Stall | null
     minimized: boolean
     // Callback to refresh data in the parent component if needed
@@ -15,7 +17,7 @@ interface FormStore {
     forms: OpenFormState[]
 
     // Actions
-    openForm: (type: 'event' | 'stall', entity?: Event | Stall | null, onSaved?: () => void) => void
+    openForm: (type: Exclude<ActiveFormType, null>, entity?: Event | Stall | null, onSaved?: () => void) => void
     closeForm: (id: string) => void
     toggleMinimize: (id: string) => void
     minimizeAll: () => void

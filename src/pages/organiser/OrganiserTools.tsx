@@ -76,6 +76,12 @@ function RegistrationsList({ eventId }: { eventId: string }) {
 }
 
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Team Manager
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// (TeamManager moved to src/components/organiser/TeamManagerPanel.tsx)
+
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN PAGE
@@ -88,8 +94,8 @@ export default function OrganiserTools() {
     const isEventManager = profile?.roles?.some(r => ['event_manager', 'app_admin', 'super_admin'].includes(r))
     const isStallManager = profile?.roles?.some(r => ['stall_manager', 'app_admin', 'super_admin'].includes(r))
 
-    const { events, loading: eventsLoading, refresh: refreshEvents, setEvents } = useMyEvents(user?.uid)
-    const { stalls, loading: stallsLoading, refresh: refreshStalls, setStalls } = useMyStalls(user?.uid)
+    const { events, loading: eventsLoading, refresh: refreshEvents, setEvents } = useMyEvents(user?.uid, profile?.roles)
+    const { stalls, loading: stallsLoading, refresh: refreshStalls, setStalls } = useMyStalls(user?.uid, profile?.roles)
 
     const [expandedEvent, setExpandedEvent] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState<'events' | 'stalls'>('events')
@@ -230,18 +236,23 @@ export default function OrganiserTools() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50">
+                                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50 overflow-x-auto">
                                         <button onClick={() => addForm('event', event)}
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-gray-50 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors">
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-gray-50 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap">
                                             <Icon icon="solar:pen-linear" width={14} />Edit
                                         </button>
                                         <button onClick={() => handleTogglePublish(event)}
-                                            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${event.is_published ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}>
+                                            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${event.is_published ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}>
                                             <Icon icon={event.is_published ? 'solar:eye-closed-linear' : 'solar:eye-linear'} width={14} />
                                             {event.is_published ? 'Unpublish' : 'Publish'}
                                         </button>
+                                        <button onClick={() => openForm('team', event)}
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 rounded-lg text-xs font-semibold text-purple-700 hover:bg-purple-100 transition-colors whitespace-nowrap">
+                                            <Icon icon="solar:users-group-two-rounded-linear" width={14} />
+                                            Team
+                                        </button>
                                         <button onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 rounded-lg text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors ml-auto">
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 rounded-lg text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors ml-auto whitespace-nowrap">
                                             <Icon icon="solar:users-group-rounded-linear" width={14} />
                                             {expandedEvent === event.id ? 'Hide' : 'Registrations'}
                                         </button>

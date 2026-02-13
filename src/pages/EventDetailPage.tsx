@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/useAuthStore'
-import { useBookmarks, useRegistration } from '@/lib/useData'
+import { useBookmarks, useRegistration, useEventTeam } from '@/lib/useData'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import type { Event } from '@/types/database'
@@ -15,6 +15,49 @@ const CATEGORY_COLORS: Record<string, string> = {
     competition: 'bg-red-500/20 text-red-100',
     sports: 'bg-green-500/20 text-green-100',
     food: 'bg-orange-500/20 text-orange-100',
+}
+
+function TeamList({ event }: { event: Event }) {
+    const { members, loading } = useEventTeam(event.id)
+
+    if (loading) return <div className="animate-pulse h-24 bg-gray-50 rounded-xl mb-6 mx-4" />
+
+    // Normalizing team members for display
+    const teamMembers = members
+        .filter(m => m.user_id !== event.organizer_id && m.profile)
+        .map(m => ({
+            ...m.profile!,
+            role_label: m.role === 'co_host' ? 'Co-Organizer' : 'Member'
+        }))
+
+    const team = [
+        ...(event.organizer ? [{ ...event.organizer, role_label: 'Organizer' }] : []),
+        ...teamMembers
+    ]
+
+    if (team.length === 0) return null
+
+    return (
+        <div className="px-4 mt-6">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Meet the Team</h3>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
+                {team.map(member => (
+                    <div key={member.id} className="flex flex-col items-center flex-shrink-0 w-20">
+                        <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden mb-2 border-2 border-white shadow-sm flex items-center justify-center text-xl font-bold text-gray-400">
+                            {member.avatar_url
+                                ? <img src={member.avatar_url} className="w-full h-full object-cover" alt={member.name} />
+                                : member.name?.[0]
+                            }
+                        </div>
+                        <div className="text-xs font-medium text-gray-900 text-center truncate w-full">{member.name?.split(' ')[0]}</div>
+                        <div className="text-[10px] text-gray-500 text-center truncate w-full opacity-70">
+                            {member.role_label}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
 }
 
 export default function EventDetailPage() {
@@ -32,7 +75,7 @@ export default function EventDetailPage() {
 
         supabase
             .from('events')
-            .select('*')
+            .select('*, organizer:profiles!organizer_id(*)')
             .eq('id', id)
             .single()
             .then(({ data, error }) => {
@@ -128,6 +171,12 @@ export default function EventDetailPage() {
                 >
                     <Icon icon="solar:alt-arrow-left-linear" width={20} />
                 </Link>
+                {user?.uid === event.organizer_id && (
+                    <div className="absolute top-4 right-4 px-3 py-1.5 bg-black/40 backdrop-blur-md border border-white/20 rounded-full flex items-center gap-2">
+                        <Icon icon="solar:crown-star-bold" className="text-amber-400" width={16} />
+                        <span className="text-xs font-semibold text-white">You are the Organizer</span>
+                    </div>
+                )}
                 <div className="absolute bottom-4 left-4 right-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${CATEGORY_COLORS[event.category] || 'bg-white/20 text-white'}`}>
                         {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
@@ -223,8 +272,8 @@ export default function EventDetailPage() {
                     }}
                     disabled={regToggling}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all press-effect ${isRegistered
-                            ? 'bg-green-50 border-green-200'
-                            : 'bg-white border-gray-100 shadow-sm'
+                        ? 'bg-green-50 border-green-200'
+                        : 'bg-white border-gray-100 shadow-sm'
                         } disabled:opacity-60`}
                 >
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isRegistered ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400'
@@ -272,6 +321,8 @@ export default function EventDetailPage() {
                     {event.description}
                 </p>
             </div>
+
+            <TeamList event={event} />
 
             {/* Rules */}
             {event.rules && (
