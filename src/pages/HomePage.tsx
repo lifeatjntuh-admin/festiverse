@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { Link } from 'react-router-dom'
-import { useFeaturedEvents, useAllEvents } from '@/lib/useData'
+import { useFeaturedEvents, useAllEvents, useBookmarks } from '@/lib/useData'
+import { useAuthStore } from '@/lib/useAuthStore'
 import { format, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns'
 
 // Fest start date
@@ -32,8 +33,10 @@ const CATEGORY_TAG_COLORS: Record<string, string> = {
 
 export default function HomePage() {
     const { t } = useTranslation()
+    const { user } = useAuthStore()
     const { events: featured, loading: featuredLoading } = useFeaturedEvents()
     const { events: allEvents, loading: allLoading } = useAllEvents()
+    const { bookmarkCount } = useBookmarks(user?.uid)
     const countdown = useCountdown(FEST_START)
 
     // Trending = non-featured events with most registrations
@@ -93,6 +96,11 @@ export default function HomePage() {
                                 </div>
                             </div>
                         ))
+                    ) : featured.length === 0 ? (
+                        <div className="w-full flex flex-col items-center justify-center py-8 px-4">
+                            <Icon icon="solar:star-shine-linear" width={40} className="text-gray-300 mb-2" />
+                            <p className="text-sm text-gray-400 font-medium">No featured events yet</p>
+                        </div>
                     ) : (
                         featured.map((event) => (
                             <Link
@@ -138,17 +146,17 @@ export default function HomePage() {
                 <h3 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">{t('home.explore')}</h3>
                 <div className="grid grid-cols-4 gap-3">
                     {[
-                        { key: 'music', icon: 'solar:music-note-linear', bg: 'bg-purple-50', border: 'border-purple-100', text: 'text-purple-600' },
-                        { key: 'tech', icon: 'solar:laptop-minimalistic-linear', bg: 'bg-cyan-50', border: 'border-cyan-100', text: 'text-cyan-600' },
-                        { key: 'food', icon: 'solar:chef-hat-linear', bg: 'bg-orange-50', border: 'border-orange-100', text: 'text-orange-600' },
-                        { key: 'games', icon: 'solar:gamepad-linear', bg: 'bg-green-50', border: 'border-green-100', text: 'text-green-600' },
-                    ].map(({ key, icon, bg, border, text }) => (
-                        <div key={key} className="flex flex-col items-center gap-2 group cursor-pointer">
+                        { key: 'music', category: 'cultural', icon: 'solar:music-note-linear', bg: 'bg-purple-50', border: 'border-purple-100', text: 'text-purple-600' },
+                        { key: 'tech', category: 'tech', icon: 'solar:laptop-minimalistic-linear', bg: 'bg-cyan-50', border: 'border-cyan-100', text: 'text-cyan-600' },
+                        { key: 'food', category: 'food', icon: 'solar:chef-hat-linear', bg: 'bg-orange-50', border: 'border-orange-100', text: 'text-orange-600' },
+                        { key: 'games', category: 'sports', icon: 'solar:gamepad-linear', bg: 'bg-green-50', border: 'border-green-100', text: 'text-green-600' },
+                    ].map(({ key, category, icon, bg, border, text }) => (
+                        <Link to={`/schedule?category=${category}`} key={key} className="flex flex-col items-center gap-2 group cursor-pointer">
                             <div className={`w-16 h-16 rounded-2xl ${bg} flex items-center justify-center ${text} ${border} border group-active:scale-95 transition-transform`}>
                                 <Icon icon={icon} width={28} />
                             </div>
                             <span className="text-xs font-medium text-gray-600">{t(`categories.${key}`)}</span>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             </div>
@@ -162,7 +170,7 @@ export default function HomePage() {
                         </div>
                         <div>
                             <h4 className="text-sm font-semibold text-gray-900">{t('home.mySchedule')}</h4>
-                            <p className="text-[10px] text-gray-500 font-medium mt-0.5">{t('home.eventsSaved', { count: allEvents.length })}</p>
+                            <p className="text-[10px] text-gray-500 font-medium mt-0.5">{t('home.eventsSaved', { count: bookmarkCount })}</p>
                         </div>
                     </Link>
                     <div className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col justify-between h-28 active:scale-[0.98] transition-transform cursor-pointer">
@@ -191,6 +199,11 @@ export default function HomePage() {
                                 </div>
                             </div>
                         ))
+                    ) : trending.length === 0 ? (
+                        <div className="text-center py-8">
+                            <Icon icon="solar:fire-linear" width={40} className="text-gray-300 mx-auto mb-2" />
+                            <p className="text-sm text-gray-400 font-medium">No trending events yet</p>
+                        </div>
                     ) : (
                         trending.map((event) => (
                             <Link

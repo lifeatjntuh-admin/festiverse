@@ -1,13 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useEventsByDay } from '@/lib/useData'
 import { format } from 'date-fns'
 
 const DAYS = ['day1', 'day2'] as const
-const FILTERS = ['allEvents', 'technical', 'cultural', 'workshops'] as const
+const FILTERS = ['allEvents', 'technical', 'cultural', 'workshops', 'tech', 'sports', 'food'] as const
 
 // Map schedule filter to DB categories
 const FILTER_CATEGORY_MAP: Record<string, string | null> = {
@@ -15,6 +15,19 @@ const FILTER_CATEGORY_MAP: Record<string, string | null> = {
     technical: 'competition',
     cultural: 'cultural',
     workshops: 'workshop',
+    tech: 'tech',
+    sports: 'sports',
+    food: 'food',
+}
+
+// Reverse map: category -> filter key (for URL param)
+const CATEGORY_TO_FILTER: Record<string, typeof FILTERS[number]> = {
+    competition: 'technical',
+    cultural: 'cultural',
+    workshop: 'workshops',
+    tech: 'tech',
+    sports: 'sports',
+    food: 'food',
 }
 
 const TAG_COLORS: Record<string, string> = {
@@ -27,8 +40,22 @@ const TAG_COLORS: Record<string, string> = {
 
 export default function SchedulePage() {
     const { t } = useTranslation()
+    const [searchParams] = useSearchParams()
     const [activeDay, setActiveDay] = useState<typeof DAYS[number]>('day1')
-    const [activeFilter, setActiveFilter] = useState<typeof FILTERS[number]>('allEvents')
+
+    // Initialize filter from URL ?category= param
+    const urlCategory = searchParams.get('category')
+    const initialFilter = urlCategory && CATEGORY_TO_FILTER[urlCategory]
+        ? CATEGORY_TO_FILTER[urlCategory]
+        : 'allEvents'
+    const [activeFilter, setActiveFilter] = useState<typeof FILTERS[number]>(initialFilter)
+
+    // Sync filter if URL param changes
+    useEffect(() => {
+        if (urlCategory && CATEGORY_TO_FILTER[urlCategory]) {
+            setActiveFilter(CATEGORY_TO_FILTER[urlCategory])
+        }
+    }, [urlCategory])
 
     const { events, loading } = useEventsByDay(activeDay)
 

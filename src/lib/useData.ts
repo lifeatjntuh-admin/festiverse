@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from './supabase'
-import type { Event, Stall } from '@/types/database'
+import type { Event, Stall, Bookmark } from '@/types/database'
 
 // ===== Events Hooks =====
 
@@ -8,6 +8,7 @@ import type { Event, Stall } from '@/types/database'
 export function useFeaturedEvents() {
     const [events, setEvents] = useState<Event[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         supabase
@@ -16,19 +17,25 @@ export function useFeaturedEvents() {
             .eq('is_featured', true)
             .eq('is_published', true)
             .order('featured_order', { ascending: true })
-            .then(({ data, error }) => {
-                if (!error && data) setEvents(data as Event[])
+            .then(({ data, error: err }) => {
+                if (err) {
+                    console.error('Failed to fetch featured events:', err)
+                    setError(err.message)
+                } else {
+                    setEvents((data ?? []) as Event[])
+                }
                 setLoading(false)
             })
     }, [])
 
-    return { events, loading }
+    return { events, loading, error }
 }
 
 /** Fetch events by day (for SchedulePage timeline) */
 export function useEventsByDay(day: 'day1' | 'day2') {
     const [events, setEvents] = useState<Event[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     // Fest days: Day 1 = March 15, Day 2 = March 16
     const dateMap = {
@@ -38,6 +45,7 @@ export function useEventsByDay(day: 'day1' | 'day2') {
 
     useEffect(() => {
         setLoading(true)
+        setError(null)
         const { start, end } = dateMap[day]
 
         supabase
@@ -47,20 +55,26 @@ export function useEventsByDay(day: 'day1' | 'day2') {
             .gte('start_time', start)
             .lte('start_time', end)
             .order('start_time', { ascending: true })
-            .then(({ data, error }) => {
-                if (!error && data) setEvents(data as Event[])
+            .then(({ data, error: err }) => {
+                if (err) {
+                    console.error('Failed to fetch events by day:', err)
+                    setError(err.message)
+                } else {
+                    setEvents((data ?? []) as Event[])
+                }
                 setLoading(false)
             })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [day])
 
-    return { events, loading }
+    return { events, loading, error }
 }
 
 /** Fetch all published events */
 export function useAllEvents() {
     const [events, setEvents] = useState<Event[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         supabase
@@ -68,13 +82,18 @@ export function useAllEvents() {
             .select('*')
             .eq('is_published', true)
             .order('start_time', { ascending: true })
-            .then(({ data, error }) => {
-                if (!error && data) setEvents(data as Event[])
+            .then(({ data, error: err }) => {
+                if (err) {
+                    console.error('Failed to fetch all events:', err)
+                    setError(err.message)
+                } else {
+                    setEvents((data ?? []) as Event[])
+                }
                 setLoading(false)
             })
     }, [])
 
-    return { events, loading }
+    return { events, loading, error }
 }
 
 // ===== Stalls Hooks =====
@@ -83,9 +102,11 @@ export function useAllEvents() {
 export function useStalls(category?: string) {
     const [stalls, setStalls] = useState<Stall[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         setLoading(true)
+        setError(null)
         let query = supabase
             .from('stalls')
             .select('*')
@@ -96,11 +117,135 @@ export function useStalls(category?: string) {
             query = query.eq('category', category)
         }
 
-        query.then(({ data, error }) => {
-            if (!error && data) setStalls(data as Stall[])
+        query.then(({ data, error: err }) => {
+            if (err) {
+                console.error('Failed to fetch stalls:', err)
+                setError(err.message)
+            } else {
+                setStalls((data ?? []) as Stall[])
+            }
             setLoading(false)
         })
     }, [category])
 
-    return { stalls, loading }
+    return { stalls, loading, error }
+}
+
+// ===== Bookmark Hooks =====
+
+/** Fetch user bookmarks and provide toggle function */
+export function useBookmarks(userId: string | undefined) {
+    const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+    const [loading, setLoading] = useState(true)
+
+    const fetchBookmarks = useCallback(async () => {
+        if (!userId) {
+            setBookmarks([])
+            setLoading(false)
+            return
+        }
+        const { data, error } = await supabase
+            .from('bookmarks')
+            .select('*')
+            .eq('user_id', userId)
+
+        if (error) {
+            console.error('Failed to fetch bookmarks:', error.message, error.details)
+        } else {
+            setBookmarks((data ?? []) as Bookmark[])
+        }
+        setLoading(false)
+    }, [userId])
+
+    useEffect(() => {
+        fetchBookmarks()
+    }, [fetchBookmarks])
+
+    const isBookmarked = (eventId: string) =>
+        bookmarks.some((b) => b.event_id === eventId)
+
+    const toggleBookmark = async (eventId: string): Promise<boolean> => {
+        if (!userId) return false
+
+        const existing = bookmarks.find((b) => b.event_id === eventId)
+
+        if (existing) {
+            // Optimistic remove
+            setBookmarks((prev) => prev.filter((b) => b.id !== existing.id))
+            const { error } = await supabase.from('bookmarks').delete().eq('id', existing.id)
+            if (error) {
+                // Revert
+                setBookmarks((prev) => [...prev, existing])
+                return false
+            }
+            return false // now unbookmarked
+        } else {
+            // Optimistic add
+            const optimistic: Bookmark = {
+                id: crypto.randomUUID(),
+                user_id: userId,
+                event_id: eventId,
+                stall_id: null,
+                type: 'event',
+                created_at: new Date().toISOString(),
+            }
+            setBookmarks((prev) => [...prev, optimistic])
+
+            const { data, error } = await supabase
+                .from('bookmarks')
+                .insert({ user_id: userId, event_id: eventId, type: 'event' })
+                .select()
+                .single()
+
+            if (error) {
+                // Revert
+                setBookmarks((prev) => prev.filter((b) => b.id !== optimistic.id))
+                return false
+            }
+            // Replace optimistic with real
+            setBookmarks((prev) =>
+                prev.map((b) => (b.id === optimistic.id ? (data as Bookmark) : b))
+            )
+            return true // now bookmarked
+        }
+    }
+
+    const bookmarkCount = bookmarks.filter((b) => b.type === 'event').length
+
+    return { bookmarks, loading, isBookmarked, toggleBookmark, bookmarkCount }
+}
+
+// ===== User Stats Hook =====
+
+/** Fetch quick stats for profile page */
+export function useUserStats(userId: string | undefined) {
+    const [stats, setStats] = useState({ eventsRegistered: 0, bookmarked: 0 })
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        if (!userId) {
+            setLoading(false)
+            return
+        }
+
+        Promise.all([
+            supabase
+                .from('event_registrations')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId),
+            supabase
+                .from('bookmarks')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .eq('type', 'event'),
+        ]).then(([regResult, bmResult]) => {
+            setStats({
+                eventsRegistered: regResult.count ?? 0,
+                bookmarked: bmResult.count ?? 0,
+            })
+            setLoading(false)
+        })
+    }, [userId])
+
+    return { stats, loading }
 }

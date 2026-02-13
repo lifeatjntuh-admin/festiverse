@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/useAuthStore'
+import { useBookmarks } from '@/lib/useData'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import type { Event } from '@/types/database'
@@ -20,8 +21,10 @@ export default function EventDetailPage() {
     const { id } = useParams()
     const { t } = useTranslation()
     const { user } = useAuthStore()
+    const { isBookmarked, toggleBookmark } = useBookmarks(user?.uid)
     const [event, setEvent] = useState<Event | null>(null)
     const [loading, setLoading] = useState(true)
+    const [bookmarking, setBookmarking] = useState(false)
 
     useEffect(() => {
         if (!id) return
@@ -37,20 +40,40 @@ export default function EventDetailPage() {
             })
     }, [id])
 
-    const handleRegister = () => {
-        if (!user) {
-            toast('Please sign in to register', { icon: '🔒' })
-            return
-        }
-        toast.success('Registration coming soon! 🎉')
-    }
-
-    const handleBookmark = () => {
+    const handleBookmark = async () => {
         if (!user) {
             toast('Please sign in to bookmark', { icon: '🔒' })
             return
         }
-        toast.success('Bookmarked! ⭐')
+        if (!event || bookmarking) return
+
+        setBookmarking(true)
+        const nowBookmarked = await toggleBookmark(event.id)
+        toast.success(nowBookmarked ? 'Bookmarked! ⭐' : 'Removed from bookmarks')
+        setBookmarking(false)
+    }
+
+    const handleShare = async () => {
+        if (!event) return
+        const shareData = {
+            title: event.title,
+            text: `Check out ${event.title} at Festiverse!`,
+            url: window.location.href,
+        }
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData)
+            } else {
+                await navigator.clipboard.writeText(window.location.href)
+                toast.success('Link copied to clipboard!')
+            }
+        } catch (err) {
+            // User cancelled share or error
+            if ((err as Error).name !== 'AbortError') {
+                await navigator.clipboard.writeText(window.location.href)
+                toast.success('Link copied to clipboard!')
+            }
+        }
     }
 
     if (loading) {
@@ -118,7 +141,17 @@ export default function EventDetailPage() {
             <div className="flex gap-3 px-4 -mt-5 relative z-10">
                 {event.registration_required ? (
                     <button
-                        onClick={handleRegister}
+                        onClick={() => {
+                            if (!user) {
+                                toast('Please sign in to register', { icon: '🔒' })
+                                return
+                            }
+                            if (event.registration_link) {
+                                window.open(event.registration_link, '_blank')
+                            } else {
+                                toast.success('Registration coming soon! 🎉')
+                            }
+                        }}
                         className="flex-1 py-3 bg-primary-600 text-white rounded-xl font-semibold text-sm shadow-glow press-effect"
                     >
                         {event.is_paid ? `${t('event.register')} • ₹${event.price}` : t('event.register')}
@@ -130,11 +163,19 @@ export default function EventDetailPage() {
                 )}
                 <button
                     onClick={handleBookmark}
+                    disabled={bookmarking}
+                    className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-soft border border-gray-100 press-effect disabled:opacity-60"
+                >
+                    <Icon
+                        icon={isBookmarked(event.id) ? 'solar:bookmark-bold' : 'solar:bookmark-linear'}
+                        width={20}
+                        className={isBookmarked(event.id) ? 'text-primary-600' : 'text-gray-500'}
+                    />
+                </button>
+                <button
+                    onClick={handleShare}
                     className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-soft border border-gray-100 press-effect"
                 >
-                    <Icon icon="solar:bookmark-linear" width={20} className="text-gray-500" />
-                </button>
-                <button className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-soft border border-gray-100 press-effect">
                     <Icon icon="solar:share-linear" width={20} className="text-gray-500" />
                 </button>
             </div>

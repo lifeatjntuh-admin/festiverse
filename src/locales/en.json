@@ -48,6 +48,9 @@
         "technical": "Technical",
         "cultural": "Cultural",
         "workshops": "Workshops",
+        "tech": "Tech",
+        "sports": "Sports",
+        "food": "Food",
         "noEvents": "No {{category}} events on this day",
         "comingSoon": "Schedule will be updated soon"
     },
@@ -55,9 +58,12 @@
         "filter": "Filter",
         "all": "All",
         "food": "Food",
+        "merchandise": "Merch",
         "merch": "Merch",
         "gaming": "Gaming",
+        "club": "Clubs",
         "clubs": "Clubs",
+        "sponsor": "Sponsors",
         "sponsors": "Sponsors"
     },
     "event": {
@@ -78,7 +84,7 @@
     "profile": {
         "events": "Events",
         "saved": "Saved",
-        "points": "Points",
+        "points": "Days Left",
         "myTickets": "My Tickets",
         "savedEvents": "Saved Events",
         "notifications": "Notifications",

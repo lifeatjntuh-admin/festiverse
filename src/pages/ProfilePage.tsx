@@ -3,14 +3,22 @@ import { useNavigate, Link } from 'react-router-dom'
 import { Icon } from '@iconify/react'
 import { useState } from 'react'
 import { useAuthStore } from '@/lib/useAuthStore'
+import { useUserStats, useBookmarks } from '@/lib/useData'
 import RoleBadge from '@/components/admin/RoleBadge'
 import toast from 'react-hot-toast'
+import { differenceInDays } from 'date-fns'
+
+const FEST_START = new Date('2026-03-15T09:00:00+05:30')
 
 export default function ProfilePage() {
     const { t } = useTranslation()
     const navigate = useNavigate()
     const { user, profile, signInWithGoogle, signOut, deleteAccount, isLoading } = useAuthStore()
+    const { stats } = useUserStats(user?.uid)
+    const { bookmarkCount } = useBookmarks(user?.uid)
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+    const daysLeft = Math.max(0, differenceInDays(FEST_START, new Date()))
 
     const isLoggedIn = !!user
 
@@ -96,9 +104,9 @@ export default function ProfilePage() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-3 gap-3 mt-6 mb-8">
                     {[
-                        { label: t('profile.events'), value: '0' },
-                        { label: t('profile.saved'), value: '0' },
-                        { label: t('profile.points'), value: '0' },
+                        { label: t('profile.events'), value: String(stats.eventsRegistered) },
+                        { label: t('profile.saved'), value: String(bookmarkCount) },
+                        { label: t('profile.points'), value: String(daysLeft) },
                     ].map(({ label, value }) => (
                         <div key={label} className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
                             <div className="text-xl font-bold text-gray-900">{value}</div>

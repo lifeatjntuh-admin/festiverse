@@ -146,6 +146,18 @@ export interface EventRegistration {
     created_at: string
 }
 
+// ===== Bookmarks =====
+export type BookmarkType = 'event' | 'stall'
+
+export interface Bookmark {
+    id: string
+    user_id: string
+    event_id: string | null
+    stall_id: string | null
+    type: BookmarkType
+    created_at: string
+}
+
 // ===== Notifications =====
 export type NotificationType = 'event_reminder' | 'event_update' | 'announcement' | 'registration_confirmed'
 
