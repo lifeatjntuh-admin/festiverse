@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '@iconify/react'
 import { useAuthStore } from '@/lib/useAuthStore'
@@ -13,6 +13,7 @@ import {
     createStall,
     updateStall,
 } from '@/lib/useData'
+import { uploadImage, getOptimizedImageUrl } from '@/lib/cloudinary'
 import type { Event, Stall } from '@/types/database'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -40,6 +41,9 @@ interface EventFormProps {
 function EventFormModal({ event, userId, onClose, onSaved }: EventFormProps) {
     const isEdit = !!event
     const [saving, setSaving] = useState(false)
+    const [uploading, setUploading] = useState(false)
+    const [showUrlInput, setShowUrlInput] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const [form, setForm] = useState({
         title: event?.title ?? '',
         description: event?.description ?? '',
@@ -59,6 +63,18 @@ function EventFormModal({ event, userId, onClose, onSaved }: EventFormProps) {
     })
 
     const set = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }))
+
+    const handleImageUpload = async (file: File) => {
+        setUploading(true)
+        try {
+            const url = await uploadImage(file)
+            set('image_url', url)
+            toast.success('Image uploaded!')
+        } catch {
+            toast.error('Image upload failed')
+        }
+        setUploading(false)
+    }
 
     const handleSubmit = async () => {
         if (!form.title || !form.start_time || !form.location) {
@@ -163,12 +179,38 @@ function EventFormModal({ event, userId, onClose, onSaved }: EventFormProps) {
                             placeholder="e.g. Main Auditorium" />
                     </div>
 
-                    {/* Image URL */}
+                    {/* Cover Image */}
                     <div>
-                        <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Image URL</label>
-                        <input type="url" value={form.image_url} onChange={e => set('image_url', e.target.value)}
-                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none"
-                            placeholder="https://..." />
+                        <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Cover Image</label>
+                        {form.image_url && (
+                            <div className="relative mb-2 rounded-xl overflow-hidden border border-gray-200">
+                                <img src={getOptimizedImageUrl(form.image_url, 400)} alt="" className="w-full h-32 object-cover" />
+                                <button onClick={() => set('image_url', '')} className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center text-xs hover:bg-black/80">
+                                    ×
+                                </button>
+                            </div>
+                        )}
+                        <div className="flex gap-2">
+                            <input type="file" ref={fileInputRef} accept="image/*" className="hidden"
+                                onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
+                            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                                className="flex-1 py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 font-medium hover:border-primary-300 hover:text-primary-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                                {uploading ? (
+                                    <><Icon icon="solar:loading-bold" width={16} className="animate-spin" /> Uploading...</>
+                                ) : (
+                                    <><Icon icon="solar:camera-add-linear" width={16} /> Upload Image</>
+                                )}
+                            </button>
+                            <button type="button" onClick={() => setShowUrlInput(!showUrlInput)}
+                                className="px-3 py-2.5 border border-gray-200 rounded-xl text-xs text-gray-500 font-medium hover:bg-gray-50 transition-colors">
+                                <Icon icon="solar:link-linear" width={16} />
+                            </button>
+                        </div>
+                        {showUrlInput && (
+                            <input type="url" value={form.image_url} onChange={e => set('image_url', e.target.value)}
+                                className="w-full mt-2 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                placeholder="Or paste image URL..." />
+                        )}
                     </div>
 
                     {/* Description */}
@@ -270,18 +312,37 @@ interface StallFormProps {
 function StallFormModal({ stall, userId, onClose, onSaved }: StallFormProps) {
     const isEdit = !!stall
     const [saving, setSaving] = useState(false)
+    const [uploading, setUploading] = useState(false)
+    const [showUrlInput, setShowUrlInput] = useState(false)
+    const stallFileRef = useRef<HTMLInputElement>(null)
     const [form, setForm] = useState({
         name: stall?.name ?? '',
         description: stall?.description ?? '',
         category: stall?.category ?? 'food',
         location: stall?.location ?? '',
-        images: stall?.images?.join('\n') ?? '',
+        imageUrls: stall?.images ?? [] as string[],
         contact_phone: stall?.contact_info?.phone ?? '',
         contact_email: stall?.contact_info?.email ?? '',
         contact_whatsapp: stall?.contact_info?.whatsapp ?? '',
     })
 
     const set = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }))
+
+    const handleStallImageUpload = async (file: File) => {
+        setUploading(true)
+        try {
+            const url = await uploadImage(file)
+            set('imageUrls', [...form.imageUrls, url])
+            toast.success('Image uploaded!')
+        } catch {
+            toast.error('Image upload failed')
+        }
+        setUploading(false)
+    }
+
+    const removeStallImage = (index: number) => {
+        set('imageUrls', form.imageUrls.filter((_: string, i: number) => i !== index))
+    }
 
     const handleSubmit = async () => {
         if (!form.name || !form.location) {
@@ -299,7 +360,7 @@ function StallFormModal({ stall, userId, onClose, onSaved }: StallFormProps) {
             description: form.description || null,
             category: form.category,
             location: form.location,
-            images: form.images ? form.images.split('\n').map((s: string) => s.trim()).filter(Boolean) : [],
+            images: form.imageUrls.filter(Boolean),
             contact_info: Object.keys(contactInfo).length > 0 ? contactInfo : null,
         }
 
@@ -369,10 +430,44 @@ function StallFormModal({ stall, userId, onClose, onSaved }: StallFormProps) {
 
                     {/* Images */}
                     <div>
-                        <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Image URLs (one per line)</label>
-                        <textarea value={form.images} onChange={e => set('images', e.target.value)}
-                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none resize-none"
-                            rows={2} placeholder="https://img1.jpg&#10;https://img2.jpg" />
+                        <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Images</label>
+                        {form.imageUrls.length > 0 && (
+                            <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
+                                {form.imageUrls.map((url: string, i: number) => (
+                                    <div key={i} className="relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
+                                        <img src={getOptimizedImageUrl(url, 200)} alt="" className="w-full h-full object-cover" />
+                                        <button onClick={() => removeStallImage(i)} className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center text-[10px] hover:bg-black/80">×</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <div className="flex gap-2">
+                            <input type="file" ref={stallFileRef} accept="image/*" className="hidden"
+                                onChange={e => e.target.files?.[0] && handleStallImageUpload(e.target.files[0])} />
+                            <button type="button" onClick={() => stallFileRef.current?.click()} disabled={uploading}
+                                className="flex-1 py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 font-medium hover:border-primary-300 hover:text-primary-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                                {uploading ? (
+                                    <><Icon icon="solar:loading-bold" width={16} className="animate-spin" /> Uploading...</>
+                                ) : (
+                                    <><Icon icon="solar:camera-add-linear" width={16} /> Add Image</>
+                                )}
+                            </button>
+                            <button type="button" onClick={() => setShowUrlInput(!showUrlInput)}
+                                className="px-3 py-2.5 border border-gray-200 rounded-xl text-xs text-gray-500 font-medium hover:bg-gray-50 transition-colors">
+                                <Icon icon="solar:link-linear" width={16} />
+                            </button>
+                        </div>
+                        {showUrlInput && (
+                            <div className="flex gap-2 mt-2">
+                                <input type="url" id="stall-url-input"
+                                    className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                    placeholder="Paste image URL..." />
+                                <button type="button" onClick={() => {
+                                    const input = document.getElementById('stall-url-input') as HTMLInputElement
+                                    if (input?.value) { set('imageUrls', [...form.imageUrls, input.value]); input.value = '' }
+                                }} className="px-3 py-2.5 bg-primary-600 text-white rounded-xl text-xs font-semibold">Add</button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Contact Info */}
@@ -461,8 +556,8 @@ function RegistrationsList({ eventId }: { eventId: string }) {
                         <button
                             onClick={() => toggleCheckIn(reg.id, reg.checked_in)}
                             className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 ${reg.checked_in
-                                    ? 'bg-green-100 text-green-700 border border-green-200'
-                                    : 'bg-gray-100 text-gray-500 border border-gray-200'
+                                ? 'bg-green-100 text-green-700 border border-green-200'
+                                : 'bg-gray-100 text-gray-500 border border-gray-200'
                                 }`}
                         >
                             <Icon
@@ -573,8 +668,8 @@ export default function OrganiserTools() {
                 <button
                     onClick={() => setActiveTab('events')}
                     className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === 'events'
-                            ? 'text-orange-600 border-orange-500'
-                            : 'text-gray-400 border-transparent'
+                        ? 'text-orange-600 border-orange-500'
+                        : 'text-gray-400 border-transparent'
                         }`}
                 >
                     <Icon icon="solar:calendar-bold" width={16} className="inline mr-1.5 -mt-0.5" />
@@ -583,8 +678,8 @@ export default function OrganiserTools() {
                 <button
                     onClick={() => setActiveTab('stalls')}
                     className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === 'stalls'
-                            ? 'text-orange-600 border-orange-500'
-                            : 'text-gray-400 border-transparent'
+                        ? 'text-orange-600 border-orange-500'
+                        : 'text-gray-400 border-transparent'
                         }`}
                 >
                     <Icon icon="solar:shop-2-bold" width={16} className="inline mr-1.5 -mt-0.5" />
@@ -632,8 +727,8 @@ export default function OrganiserTools() {
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <h4 className="text-sm font-bold text-gray-900 truncate">{event.title}</h4>
                                                     <span className={`flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${event.is_published
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-yellow-100 text-yellow-700'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-yellow-100 text-yellow-700'
                                                         }`}>
                                                         {event.is_published ? 'Live' : 'Draft'}
                                                     </span>
@@ -672,8 +767,8 @@ export default function OrganiserTools() {
                                             <button
                                                 onClick={() => handleTogglePublish(event)}
                                                 className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${event.is_published
-                                                        ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
-                                                        : 'bg-green-50 text-green-700 hover:bg-green-100'
+                                                    ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
+                                                    : 'bg-green-50 text-green-700 hover:bg-green-100'
                                                     }`}
                                             >
                                                 <Icon icon={event.is_published ? 'solar:eye-closed-linear' : 'solar:eye-linear'} width={14} />
@@ -741,8 +836,8 @@ export default function OrganiserTools() {
                                                 <div className="flex items-center gap-2">
                                                     <h4 className="text-sm font-bold text-gray-900 truncate">{stall.name}</h4>
                                                     <span className={`flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${stall.is_active
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-red-100 text-red-700'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-red-100 text-red-700'
                                                         }`}>
                                                         {stall.is_active ? 'Active' : 'Inactive'}
                                                     </span>
@@ -773,8 +868,8 @@ export default function OrganiserTools() {
                                         <button
                                             onClick={() => handleToggleStall(stall)}
                                             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${stall.is_active
-                                                    ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                                                    : 'bg-green-50 text-green-700 hover:bg-green-100'
+                                                ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                                                : 'bg-green-50 text-green-700 hover:bg-green-100'
                                                 }`}
                                         >
                                             <Icon icon={stall.is_active ? 'solar:power-bold' : 'solar:power-linear'} width={14} />
