@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
+import FormOverlayManager from '@/components/organiser/FormOverlayManager'
 
 const NAV_ITEMS = [
     { key: 'home', path: '/', iconLinear: 'solar:home-smile-linear', iconBold: 'solar:home-smile-bold' },
@@ -16,7 +17,9 @@ export default function AppLayout() {
     const location = useLocation()
 
     return (
-        <div className="min-h-dvh bg-gray-50 flex flex-col">
+        <div className="h-dvh bg-gray-50 flex flex-col overflow-hidden">
+            <FormOverlayManager />
+
             {/* ===== TOP BAR (Glassmorphism) ===== */}
             <header className="sticky top-0 z-40 h-14 glass border-b border-gray-100 flex items-center justify-between px-4 transition-all duration-300">
                 {/* Left: Logo */}
