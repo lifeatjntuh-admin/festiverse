@@ -2,167 +2,241 @@ import { create } from 'zustand'
 import {
     onAuthStateChanged,
     signInWithPopup,
+    GoogleAuthProvider,
     signOut as firebaseSignOut,
-    type User,
+    User
 } from 'firebase/auth'
-import { auth, googleProvider } from './firebase'
+import { auth } from './firebase'
 import { supabase } from './supabase'
-import type { Profile } from '@/types/database'
+import { Profile, UserRole } from '@/types/database'
 import toast from 'react-hot-toast'
 
 interface AuthState {
-    // State
     user: User | null
     profile: Profile | null
     isLoading: boolean
-    isInitialized: boolean
-    error: string | null
+    initialized: boolean
 
-    // Actions
-    initialize: () => () => void
+    // Auth Actions
     signInWithGoogle: () => Promise<void>
     signOut: () => Promise<void>
-    updateProfile: (updates: Partial<Profile>) => Promise<void>
     deleteAccount: () => Promise<void>
-    clearError: () => void
+
+    // Role Actions (User)
+    requestRole: (role: UserRole) => Promise<void>
+    cancelRoleRequest: () => Promise<void>
+
+    // Admin Actions
+    manageRole: (userId: string, role: UserRole, action: 'add' | 'remove') => Promise<void>
+    approveRoleRequest: (userId: string) => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-    // Initial state
     user: null,
     profile: null,
     isLoading: true,
-    isInitialized: false,
-    error: null,
+    initialized: false,
 
-    // Initialize auth listener — returns unsubscribe function
-    initialize: () => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                set({ user: firebaseUser, isLoading: true })
-
-                // Sync/fetch profile from Supabase
-                try {
-                    await syncProfile(firebaseUser)
-                    const profile = await fetchProfile(firebaseUser.uid)
-                    set({ profile, isLoading: false, isInitialized: true })
-                } catch (err) {
-                    console.error('Failed to sync profile:', err)
-                    set({
-                        profile: null,
-                        isLoading: false,
-                        isInitialized: true,
-                        error: 'Failed to load profile',
-                    })
-                }
-            } else {
-                set({
-                    user: null,
-                    profile: null,
-                    isLoading: false,
-                    isInitialized: true,
-                })
-            }
-        })
-
-        return unsubscribe
-    },
-
-    // Google Sign-In via Firebase
     signInWithGoogle: async () => {
-        set({ isLoading: true, error: null })
+        set({ isLoading: true })
         try {
-            await signInWithPopup(auth, googleProvider)
-            // onAuthStateChanged will handle the rest
-        } catch (err: unknown) {
-            const message =
-                err instanceof Error ? err.message : 'Sign-in failed'
-            set({ isLoading: false, error: message })
-            throw err
+            const provider = new GoogleAuthProvider()
+            await signInWithPopup(auth, provider)
+            // Profile sync happens in onAuthStateChanged
+        } catch (error) {
+            console.error('Sign in error:', error)
+            toast.error('Failed to sign in')
+            set({ isLoading: false })
+            throw error
         }
     },
 
-    // Sign Out
     signOut: async () => {
-        set({ isLoading: true, error: null })
+        set({ isLoading: true })
         try {
             await firebaseSignOut(auth)
             set({ user: null, profile: null, isLoading: false })
-        } catch (err: unknown) {
-            const message =
-                err instanceof Error ? err.message : 'Sign-out failed'
-            set({ isLoading: false, error: message })
+        } catch (error) {
+            console.error('Sign out error:', error)
+            toast.error('Failed to sign out')
+            set({ isLoading: false })
         }
     },
 
-    // Update profile in Supabase
-    updateProfile: async (updates: Partial<Profile>) => {
-        const { user } = get()
-        if (!user) return
-
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .update(updates)
-                .eq('id', user.uid)
-                .select()
-                .single()
-
-            if (error) throw error
-            set({ profile: data as Profile })
-        } catch (err) {
-            console.error('Failed to update profile:', err)
-            throw err
-        }
-    },
-
-    // Soft-delete account (flag in Supabase + sign out Firebase)
     deleteAccount: async () => {
         const { user } = get()
         if (!user) return
 
-        set({ isLoading: true, error: null })
+        set({ isLoading: true })
         try {
-            // Flag as deleted in Supabase
+            // Soft delete in Supabase
             const { error } = await supabase
                 .from('profiles')
-                .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+                .update({
+                    is_deleted: true,
+                    deleted_at: new Date().toISOString()
+                })
                 .eq('id', user.uid)
 
             if (error) throw error
 
-            // Sign out of Firebase
-            await firebaseSignOut(auth)
-            set({ user: null, profile: null, isLoading: false })
+            await get().signOut()
+            toast.success('Account deleted successfully')
+        } catch (error) {
+            console.error('Delete account error:', error)
+            toast.error('Failed to delete account')
+            set({ isLoading: false })
+            throw error
+        }
+    },
+
+    requestRole: async (role: UserRole) => {
+        const { user, profile } = get()
+        if (!user || !profile) return
+
+        try {
+            // Optimistic update
+            set({ profile: { ...profile, role_request: role } })
+
+            const { error } = await supabase
+                .from('profiles')
+                .update({ role_request: role })
+                .eq('id', user.uid)
+
+            if (error) {
+                // Revert optimistic update
+                set({ profile: { ...profile, role_request: null } })
+                throw error
+            }
+            toast.success('Role requested successfully')
+        } catch (error) {
+            console.error('Request role error:', error)
+            toast.error('Failed to request role')
+        }
+    },
+
+    cancelRoleRequest: async () => {
+        const { user, profile } = get()
+        if (!user || !profile) return
+
+        const previousRequest = profile.role_request
+        try {
+            // Optimistic update
+            set({ profile: { ...profile, role_request: null } })
+
+            const { error } = await supabase
+                .from('profiles')
+                .update({ role_request: null })
+                .eq('id', user.uid)
+
+            if (error) {
+                // Revert
+                set({ profile: { ...profile, role_request: previousRequest } })
+                throw error
+            }
+            toast.success('Request cancelled')
+        } catch (error) {
+            console.error('Cancel request error:', error)
+            toast.error('Failed to cancel request')
+        }
+    },
+
+    manageRole: async (userId: string, role: UserRole, action: 'add' | 'remove') => {
+        const { user, profile } = get()
+
+        if (!user || !profile || (!profile.roles.includes('super_admin') && !profile.roles.includes('app_admin'))) {
+            throw new Error('Unauthorized')
+        }
+
+        try {
+            const { error } = await supabase.rpc('manage_role', {
+                executor_id: user.uid,
+                target_user_id: userId,
+                role_to_manage: role,
+                action_type: action
+            })
+
+            if (error) throw error
+            toast.success(`Role ${action === 'add' ? 'added' : 'removed'} successfully`)
+
+            // Optimistic update if modifying self (unlikely but possible)
+            if (userId === user.uid) {
+                const newRoles = action === 'add'
+                    ? [...profile.roles, role]
+                    : profile.roles.filter(r => r !== role)
+                set({ profile: { ...profile, roles: newRoles } })
+            }
         } catch (err) {
-            console.error('Failed to delete account:', err)
-            set({ isLoading: false, error: 'Failed to delete account' })
+            console.error('Failed to manage role:', err)
+            toast.error('Failed to update role')
             throw err
         }
     },
 
-    clearError: () => set({ error: null }),
+    approveRoleRequest: async (userId: string) => {
+        const { user, profile } = get()
+        if (!user || !profile || (!profile.roles.includes('super_admin') && !profile.roles.includes('app_admin'))) {
+            throw new Error('Unauthorized')
+        }
+
+        try {
+            const { error } = await supabase.rpc('approve_role_request', {
+                executor_id: user.uid,
+                target_user_id: userId
+            })
+
+            if (error) throw error
+            toast.success('Role request approved')
+        } catch (err) {
+            console.error('Failed to approve request:', err)
+            toast.error('Failed to approve request')
+            throw err
+        }
+    }
 }))
 
-// ===== Helper Functions =====
-
-/**
- * Sync Firebase user data to Supabase profiles table.
- * Uses upsert to create on first login, update on subsequent logins.
- */
+// Helper: Sync Profile logic
 async function syncProfile(firebaseUser: User): Promise<void> {
     const { uid, email, displayName, photoURL } = firebaseUser
 
     // 1. Check if profile exists
     const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
-        .select('id, is_deleted')
+        .select('id, is_deleted, roles')
         .eq('id', uid)
         .maybeSingle()
 
     if (fetchError) {
-        console.error('Error checking profile existence:', fetchError)
         throw fetchError
+    }
+
+    // 2. Reactivate if soft-deleted
+    if (existingProfile?.is_deleted) {
+        // Determine Roles (Bootstrapping) - Keep existing roles or default? 
+        // If reactivating, we probably keep existing roles unless logic dictates otherwise.
+        // Let's just reactivate.
+        await supabase.from('profiles').update({
+            is_deleted: false,
+            deleted_at: null
+        }).eq('id', uid)
+        toast.success('Welcome back! Your account has been reactivated.')
+    }
+
+    // 3. Determine Roles (Bootstrapping for new users or migration)
+    let roles: UserRole[] = ['attendee']
+    if (existingProfile?.roles && existingProfile.roles.length > 0) {
+        roles = existingProfile.roles as UserRole[]
+    } else {
+        // Check if any Super Admin exists
+        const { count, error: countError } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .contains('roles', ['super_admin'])
+
+        if (!countError && count === 0) {
+            roles = ['super_admin', 'attendee']
+            console.log('🎉 First user detected! Promoting to Super Admin.')
+        }
     }
 
     const payload = {
@@ -171,59 +245,51 @@ async function syncProfile(firebaseUser: User): Promise<void> {
         avatar_url: photoURL || null,
         is_deleted: false,
         deleted_at: null,
+        roles: roles,
+        // permissions: {}, // let's not overwrite permissions if we don't have to, or default to {}
     }
 
-    if (existingProfile) {
-        // Check if account was previously deleted
-        const wasDeleted = existingProfile.is_deleted
+    // Upsert profile
+    const { error: upsertError } = await supabase
+        .from('profiles')
+        .upsert({ id: uid, ...payload, updated_at: new Date().toISOString() })
 
-        // 2. Update existing profile
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update(payload)
-            .eq('id', uid)
+    if (upsertError) throw upsertError
 
-        if (updateError) {
-            console.error('Error updating profile:', updateError)
-            throw updateError
-        }
+    if (!existingProfile && roles.includes('super_admin')) {
+        toast('You are the first user! You are now Super Admin 👑', { duration: 6000 })
+    }
+}
 
-        if (wasDeleted) {
-            toast.success('Welcome back! Your account has been recovered.', {
-                icon: '♻️',
-                duration: 5000,
+// Initialize Auth Listener
+onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+        try {
+            await syncProfile(firebaseUser)
+
+            // Fetch full profile
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', firebaseUser.uid)
+                .single()
+
+            if (error) throw error
+
+            useAuthStore.setState({
+                user: firebaseUser,
+                profile: profile as Profile,
+                isLoading: false,
+                initialized: true
             })
+        } catch (error) {
+            console.error('Profile sync failed:', error)
+            toast.error('Failed to load profile')
+            // Sign out if sync fails to prevent inconsistent state
+            await firebaseSignOut(auth)
+            useAuthStore.setState({ user: null, profile: null, isLoading: false, initialized: true })
         }
     } else {
-        // 3. Create new profile
-        const { error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-                id: uid,
-                ...payload,
-            })
-
-        if (insertError) {
-            console.error('Error creating profile:', insertError)
-            throw insertError
-        }
+        useAuthStore.setState({ user: null, profile: null, isLoading: false, initialized: true })
     }
-}
-
-/**
- * Fetch the full profile from Supabase.
- */
-async function fetchProfile(userId: string): Promise<Profile | null> {
-    const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-    if (error) {
-        console.error('Profile fetch error:', error)
-        return null
-    }
-
-    return data as Profile
-}
+})

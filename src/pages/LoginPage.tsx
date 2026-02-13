@@ -6,15 +6,15 @@ import toast from 'react-hot-toast'
 export default function LoginPage() {
     const { t } = useTranslation()
     const navigate = useNavigate()
-    const { signInWithGoogle, isLoading, error } = useAuthStore()
+    const { signInWithGoogle, isLoading } = useAuthStore()
 
     const handleGoogleSignIn = async () => {
         try {
             await signInWithGoogle()
             toast.success('Welcome to Festiverse! 🎉')
             navigate('/', { replace: true })
-        } catch {
-            toast.error(error || 'Sign-in failed. Please try again.')
+        } catch (err) {
+            toast.error((err instanceof Error ? err.message : String(err)) || 'Sign-in failed. Please try again.')
         }
     }
 

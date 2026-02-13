@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import AppLayout from '@/layouts/AppLayout'
@@ -10,6 +10,7 @@ const HomePage = lazy(() => import('@/pages/HomePage'))
 const SchedulePage = lazy(() => import('@/pages/SchedulePage'))
 const StallsPage = lazy(() => import('@/pages/StallsPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'))
 const EventDetailPage = lazy(() => import('@/pages/EventDetailPage'))
 const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
@@ -20,9 +21,9 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
  * Guest guard: redirects to / if already authenticated
  */
 function GuestRoute({ children }: { children: React.ReactNode }) {
-    const { user, isLoading, isInitialized } = useAuthStore()
+    const { user, isLoading, initialized } = useAuthStore()
 
-    if (!isInitialized || isLoading) {
+    if (!initialized || isLoading) {
         return <LoadingSpinner fullScreen />
     }
 
@@ -34,13 +35,8 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
-    const initialize = useAuthStore((s) => s.initialize)
+    // Auth listener is initialized in useAuthStore.ts
 
-    // Initialize Firebase auth listener on mount
-    useEffect(() => {
-        const unsubscribe = initialize()
-        return unsubscribe
-    }, [initialize])
 
     return (
         <BrowserRouter>
@@ -74,6 +70,9 @@ function App() {
                         <Route path="/schedule" element={<SchedulePage />} />
                         <Route path="/stalls" element={<StallsPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
+
+                        {/* Admin Routes */}
+                        <Route path="/admin" element={<AdminDashboard />} />
 
                         {/* Event detail — public viewing, login prompted for actions */}
                         <Route path="/events/:id" element={<EventDetailPage />} />

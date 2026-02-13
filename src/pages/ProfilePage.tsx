@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Icon } from '@iconify/react'
 import { useState } from 'react'
 import { useAuthStore } from '@/lib/useAuthStore'
+import RoleBadge from '@/components/admin/RoleBadge'
 import toast from 'react-hot-toast'
 
 export default function ProfilePage() {
@@ -43,7 +44,7 @@ export default function ProfilePage() {
         <div className="animate-fade-in">
             <div className="p-4 pt-8 text-center">
                 {/* Avatar */}
-                <div className="w-24 h-24 mx-auto rounded-full p-1 bg-gradient-to-tr from-primary-400 to-secondary-400 mb-3">
+                <div className="w-24 h-24 mx-auto rounded-full p-1 bg-gradient-to-tr from-primary-400 to-secondary-400 mb-3 relative group">
                     {isLoggedIn && avatarUrl ? (
                         <img
                             src={avatarUrl}
@@ -56,8 +57,15 @@ export default function ProfilePage() {
                             {isLoggedIn ? initials : '?'}
                         </div>
                     )}
+                    {/* Role Badge Overlay */}
+                    {isLoggedIn && profile?.roles && (
+                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 shadow-sm w-full max-w-[200px]">
+                            <RoleBadge role={profile.roles} />
+                        </div>
+                    )}
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
+
+                <h2 className="text-xl font-bold text-gray-900 mt-4">{displayName}</h2>
                 {isLoggedIn ? (
                     <p className="text-sm text-gray-500 font-medium">{displayEmail}</p>
                 ) : (
@@ -97,6 +105,94 @@ export default function ProfilePage() {
                             <div className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">{label}</div>
                         </div>
                     ))}
+                </div>
+
+                {/* Role Specific Actions */}
+                <div className="mb-4 space-y-3">
+                    {/* Admin Dashboard */}
+                    {isLoggedIn && (profile?.roles?.some((r: string) => ['super_admin', 'app_admin'].includes(r))) && (
+                        <Link to="/admin" className="w-full p-4 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg border border-white/20 flex items-center justify-between text-white active:scale-[0.99] transition-transform">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                                    <Icon icon="solar:shield-user-bold" width={18} />
+                                </div>
+                                <div className="text-left">
+                                    <div className="font-bold text-sm">Admin Dashboard</div>
+                                    <div className="text-[10px] text-white/80">Manage users & roles</div>
+                                </div>
+                            </div>
+                            <Icon icon="solar:alt-arrow-right-linear" />
+                        </Link>
+                    )}
+
+                    {/* Organizer/Manager Dashboard */}
+                    {isLoggedIn && (profile?.roles?.some((r: string) => ['super_admin', 'app_admin', 'event_manager', 'stall_manager', 'team_member'].includes(r))) && (
+                        <button className="w-full p-4 bg-gradient-to-r from-orange-400 to-red-500 rounded-xl shadow-lg border border-white/20 flex items-center justify-between text-white active:scale-[0.99] transition-transform">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                                    <Icon icon="solar:widget-linear" width={18} />
+                                </div>
+                                <div className="text-left">
+                                    <div className="font-bold text-sm">Organizer Tools</div>
+                                    <div className="text-[10px] text-white/80">Manage your events/stalls</div>
+                                </div>
+                            </div>
+                            <Icon icon="solar:alt-arrow-right-linear" />
+                        </button>
+                    )}
+
+                    {/* Request Role */}
+                    {isLoggedIn && !profile?.roles?.includes('super_admin') && !profile?.role_request && (
+                        <div className="w-full p-4 bg-white rounded-xl border border-gray-100 shadow-sm text-left space-y-3">
+                            <h3 className="font-semibold text-gray-900 text-sm">Request Roles</h3>
+                            <p className="text-xs text-gray-500">
+                                Want to host events or manage a stall? Request a role below.
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    onClick={() => useAuthStore.getState().requestRole('event_manager')}
+                                    className="p-3 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg text-blue-700 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
+                                >
+                                    <Icon icon="solar:calendar-add-linear" width={20} />
+                                    Event Manager
+                                </button>
+                                <button
+                                    onClick={() => useAuthStore.getState().requestRole('stall_manager')}
+                                    className="p-3 bg-orange-50 hover:bg-orange-100 border border-orange-100 rounded-lg text-orange-700 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
+                                >
+                                    <Icon icon="solar:shop-2-linear" width={20} />
+                                    Stall Manager
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => useAuthStore.getState().requestRole('team_member')}
+                                className="w-full text-xs text-gray-400 hover:text-gray-600 font-medium py-1"
+                            >
+                                I'm just a Team Member
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Request Pending */}
+                    {isLoggedIn && profile?.role_request && (
+                        <div className="w-full p-4 bg-yellow-50 border border-yellow-100 rounded-xl flex items-center justify-between text-yellow-700">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                                    <Icon icon="solar:clock-circle-linear" width={18} />
+                                </div>
+                                <div className="text-left">
+                                    <span className="font-semibold text-sm block">Request Pending</span>
+                                    <span className="text-xs opacity-80 uppercase font-bold tracking-wider">{profile.role_request.replace('_', ' ')}</span>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => useAuthStore.getState().cancelRoleRequest()}
+                                className="text-xs font-semibold text-yellow-700 hover:text-red-600 underline decoration-yellow-700/30 hover:decoration-red-600/30 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Menu Items */}

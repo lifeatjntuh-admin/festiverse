@@ -1,10 +1,11 @@
 // ===== Profile Roles =====
-export interface ProfileRoles {
-    is_organizer: boolean
-    is_stall_owner: boolean
-    organized_events: string[]
-    owned_stalls: string[]
-}
+export type UserRole =
+    | 'super_admin'
+    | 'app_admin'
+    | 'event_manager'
+    | 'stall_manager'
+    | 'team_member'
+    | 'attendee'
 
 export interface ProfilePreferences {
     email_reminders: boolean
@@ -21,7 +22,9 @@ export interface Profile {
     department: string | null
     phone: string | null
     avatar_url: string | null
-    roles: ProfileRoles
+    roles: UserRole[] // Supported roles: 'super_admin', 'app_admin', 'event_manager', 'stall_manager', 'team_member', 'attendee'
+    role_request: UserRole | null // Requested role
+    permissions: Record<string, boolean> // Optional granular overrides
     preferences: ProfilePreferences
     is_deleted: boolean
     deleted_at: string | null
