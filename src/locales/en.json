@@ -82,9 +82,9 @@
         "bookmarks": "{{count}} interested"
     },
     "profile": {
-        "events": "Events",
+        "events": "Registered",
         "saved": "Saved",
-        "points": "Days Left",
+        "stallsVisited": "Stalls",
         "myTickets": "My Tickets",
         "savedEvents": "Saved Events",
         "notifications": "Notifications",

@@ -133,7 +133,7 @@ export function useStalls(category?: string) {
 
 // ===== Bookmark Hooks =====
 
-/** Fetch user bookmarks and provide toggle function */
+/** Fetch user bookmarks and provide toggle functions for events and stalls */
 export function useBookmarks(userId: string | undefined) {
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
     const [loading, setLoading] = useState(true)
@@ -161,26 +161,24 @@ export function useBookmarks(userId: string | undefined) {
         fetchBookmarks()
     }, [fetchBookmarks])
 
+    // ---- Event bookmarks ----
     const isBookmarked = (eventId: string) =>
-        bookmarks.some((b) => b.event_id === eventId)
+        bookmarks.some((b) => b.event_id === eventId && b.type === 'event')
 
     const toggleBookmark = async (eventId: string): Promise<boolean> => {
         if (!userId) return false
 
-        const existing = bookmarks.find((b) => b.event_id === eventId)
+        const existing = bookmarks.find((b) => b.event_id === eventId && b.type === 'event')
 
         if (existing) {
-            // Optimistic remove
             setBookmarks((prev) => prev.filter((b) => b.id !== existing.id))
             const { error } = await supabase.from('bookmarks').delete().eq('id', existing.id)
             if (error) {
-                // Revert
                 setBookmarks((prev) => [...prev, existing])
                 return false
             }
-            return false // now unbookmarked
+            return false
         } else {
-            // Optimistic add
             const optimistic: Bookmark = {
                 id: crypto.randomUUID(),
                 user_id: userId,
@@ -198,28 +196,137 @@ export function useBookmarks(userId: string | undefined) {
                 .single()
 
             if (error) {
-                // Revert
                 setBookmarks((prev) => prev.filter((b) => b.id !== optimistic.id))
                 return false
             }
-            // Replace optimistic with real
             setBookmarks((prev) =>
                 prev.map((b) => (b.id === optimistic.id ? (data as Bookmark) : b))
             )
-            return true // now bookmarked
+            return true
+        }
+    }
+
+    // ---- Stall bookmarks ----
+    const isStallBookmarked = (stallId: string) =>
+        bookmarks.some((b) => b.stall_id === stallId && b.type === 'stall')
+
+    const toggleStallBookmark = async (stallId: string): Promise<boolean> => {
+        if (!userId) return false
+
+        const existing = bookmarks.find((b) => b.stall_id === stallId && b.type === 'stall')
+
+        if (existing) {
+            setBookmarks((prev) => prev.filter((b) => b.id !== existing.id))
+            const { error } = await supabase.from('bookmarks').delete().eq('id', existing.id)
+            if (error) {
+                setBookmarks((prev) => [...prev, existing])
+                return false
+            }
+            return false
+        } else {
+            const optimistic: Bookmark = {
+                id: crypto.randomUUID(),
+                user_id: userId,
+                event_id: null,
+                stall_id: stallId,
+                type: 'stall',
+                created_at: new Date().toISOString(),
+            }
+            setBookmarks((prev) => [...prev, optimistic])
+
+            const { data, error } = await supabase
+                .from('bookmarks')
+                .insert({ user_id: userId, stall_id: stallId, type: 'stall' })
+                .select()
+                .single()
+
+            if (error) {
+                setBookmarks((prev) => prev.filter((b) => b.id !== optimistic.id))
+                return false
+            }
+            setBookmarks((prev) =>
+                prev.map((b) => (b.id === optimistic.id ? (data as Bookmark) : b))
+            )
+            return true
         }
     }
 
     const bookmarkCount = bookmarks.filter((b) => b.type === 'event').length
 
-    return { bookmarks, loading, isBookmarked, toggleBookmark, bookmarkCount }
+    return { bookmarks, loading, isBookmarked, toggleBookmark, isStallBookmarked, toggleStallBookmark, bookmarkCount }
+}
+
+// ===== Self-Registration Hook =====
+
+/** Let user self-mark whether they registered for an event */
+export function useRegistration(userId: string | undefined, eventId: string | undefined) {
+    const [isRegistered, setIsRegistered] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [toggling, setToggling] = useState(false)
+
+    useEffect(() => {
+        if (!userId || !eventId) {
+            setLoading(false)
+            return
+        }
+        supabase
+            .from('event_registrations')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('event_id', eventId)
+            .maybeSingle()
+            .then(({ data }) => {
+                setIsRegistered(!!data)
+                setLoading(false)
+            })
+    }, [userId, eventId])
+
+    const toggleRegistration = async (): Promise<boolean> => {
+        if (!userId || !eventId || toggling) return isRegistered
+
+        setToggling(true)
+
+        if (isRegistered) {
+            // Remove registration
+            setIsRegistered(false)
+            const { error } = await supabase
+                .from('event_registrations')
+                .delete()
+                .eq('user_id', userId)
+                .eq('event_id', eventId)
+            if (error) {
+                console.error('Failed to remove registration:', error)
+                setIsRegistered(true)
+            }
+        } else {
+            // Add registration
+            setIsRegistered(true)
+            const { error } = await supabase
+                .from('event_registrations')
+                .insert({
+                    event_id: eventId,
+                    user_id: userId,
+                    payment_status: 'completed',
+                    checked_in: false,
+                })
+            if (error) {
+                console.error('Failed to add registration:', error)
+                setIsRegistered(false)
+            }
+        }
+
+        setToggling(false)
+        return !isRegistered
+    }
+
+    return { isRegistered, loading, toggling, toggleRegistration }
 }
 
 // ===== User Stats Hook =====
 
 /** Fetch quick stats for profile page */
 export function useUserStats(userId: string | undefined) {
-    const [stats, setStats] = useState({ eventsRegistered: 0, bookmarked: 0 })
+    const [stats, setStats] = useState({ eventsRegistered: 0, bookmarked: 0, stallsVisited: 0 })
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -238,10 +345,16 @@ export function useUserStats(userId: string | undefined) {
                 .select('*', { count: 'exact', head: true })
                 .eq('user_id', userId)
                 .eq('type', 'event'),
-        ]).then(([regResult, bmResult]) => {
+            supabase
+                .from('bookmarks')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .eq('type', 'stall'),
+        ]).then(([regResult, bmResult, stallResult]) => {
             setStats({
                 eventsRegistered: regResult.count ?? 0,
                 bookmarked: bmResult.count ?? 0,
+                stallsVisited: stallResult.count ?? 0,
             })
             setLoading(false)
         })

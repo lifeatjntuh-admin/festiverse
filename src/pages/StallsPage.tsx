@@ -1,8 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { useStalls } from '@/lib/useData'
+import { useStalls, useBookmarks } from '@/lib/useData'
+import { useAuthStore } from '@/lib/useAuthStore'
+import toast from 'react-hot-toast'
 
 const FILTERS = ['all', 'food', 'merchandise', 'club', 'sponsor'] as const
 
@@ -18,29 +21,62 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default function StallsPage() {
     const { t } = useTranslation()
+    const { user } = useAuthStore()
+    const [searchParams, setSearchParams] = useSearchParams()
     const [activeFilter, setActiveFilter] = useState<typeof FILTERS[number]>('all')
+    const { bookmarks, isStallBookmarked, toggleStallBookmark } = useBookmarks(user?.uid)
 
+    const viewMode = searchParams.get('view') as 'saved' | null
     const { stalls, loading } = useStalls(activeFilter)
+
+    // Filter stalls in saved view
+    const savedStallIds = bookmarks.filter(b => b.type === 'stall').map(b => b.stall_id)
+    const displayStalls = viewMode === 'saved'
+        ? stalls.filter(s => savedStallIds.includes(s.id))
+        : stalls
+
+    const handleStallBookmark = async (stallId: string) => {
+        if (!user) {
+            toast('Please sign in to bookmark', { icon: '🔒' })
+            return
+        }
+        const nowBookmarked = await toggleStallBookmark(stallId)
+        toast.success(nowBookmarked ? 'Stall saved! ⭐' : 'Removed from saved')
+    }
 
     return (
         <div className="animate-fade-in">
-            {/* Filter Bar */}
-            <div className="flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar">
-                {FILTERS.map((filter) => (
+            {viewMode === 'saved' ? (
+                <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 sticky top-0 z-10">
+                    <div className="flex items-center gap-2">
+                        <Icon icon="solar:heart-bold" width={18} className="text-red-500" />
+                        <h3 className="text-sm font-bold text-gray-800">Saved Stalls</h3>
+                    </div>
                     <button
-                        key={filter}
-                        onClick={() => setActiveFilter(filter)}
-                        className={cn(
-                            'flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200',
-                            activeFilter === filter
-                                ? 'bg-primary-600 text-white shadow-glow'
-                                : 'bg-white text-gray-600 border border-gray-200 hover:border-primary-300'
-                        )}
+                        onClick={() => setSearchParams({})}
+                        className="text-xs font-semibold text-primary-600 px-3 py-1 rounded-full bg-primary-50 active:scale-95 transition-transform"
                     >
-                        {t(`stalls.${filter}`) || filter.charAt(0).toUpperCase() + filter.slice(1)}
+                        Show All
                     </button>
-                ))}
-            </div>
+                </div>
+            ) : (
+                <div className="flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar">
+                    {FILTERS.map((filter) => (
+                        <button
+                            key={filter}
+                            onClick={() => setActiveFilter(filter)}
+                            className={cn(
+                                'flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200',
+                                activeFilter === filter
+                                    ? 'bg-primary-600 text-white shadow-glow'
+                                    : 'bg-white text-gray-600 border border-gray-200 hover:border-primary-300'
+                            )}
+                        >
+                            {t(`stalls.${filter}`) || filter.charAt(0).toUpperCase() + filter.slice(1)}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {/* Masonry Grid */}
             <div className="px-4 mt-2 columns-2 gap-3 space-y-3">
@@ -54,13 +90,13 @@ export default function StallsPage() {
                             </div>
                         </div>
                     ))
-                ) : stalls.length === 0 ? (
+                ) : displayStalls.length === 0 ? (
                     <div className="col-span-2 text-center py-12">
-                        <Icon icon="solar:shop-2-linear" className="text-gray-300 mx-auto mb-3" width={48} />
-                        <p className="text-sm text-gray-400 font-medium">No stalls in this category</p>
+                        <Icon icon={viewMode === 'saved' ? 'solar:heart-broken-linear' : 'solar:shop-2-linear'} className="text-gray-300 mx-auto mb-3" width={48} />
+                        <p className="text-sm text-gray-400 font-medium">{viewMode === 'saved' ? 'No saved stalls yet' : 'No stalls in this category'}</p>
                     </div>
                 ) : (
-                    stalls.map((stall, i) => (
+                    displayStalls.map((stall, i) => (
                         <div
                             key={stall.id}
                             className="break-inside-avoid bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden group cursor-pointer active:scale-[0.98] transition-transform"
@@ -76,6 +112,16 @@ export default function StallsPage() {
                                 <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
                                     {CATEGORY_LABELS[stall.category] || stall.category}
                                 </div>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleStallBookmark(stall.id) }}
+                                    className="absolute top-2 left-2 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm active:scale-90 transition-transform"
+                                >
+                                    <Icon
+                                        icon={isStallBookmarked(stall.id) ? 'solar:heart-bold' : 'solar:heart-linear'}
+                                        width={16}
+                                        className={isStallBookmarked(stall.id) ? 'text-red-500' : 'text-gray-600'}
+                                    />
+                                </button>
                             </div>
                             <div className="p-3">
                                 <h4 className="text-sm font-semibold text-gray-900 leading-tight">{stall.name}</h4>

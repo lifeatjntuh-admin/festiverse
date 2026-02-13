@@ -6,9 +6,6 @@ import { useAuthStore } from '@/lib/useAuthStore'
 import { useUserStats, useBookmarks } from '@/lib/useData'
 import RoleBadge from '@/components/admin/RoleBadge'
 import toast from 'react-hot-toast'
-import { differenceInDays } from 'date-fns'
-
-const FEST_START = new Date('2026-03-15T09:00:00+05:30')
 
 export default function ProfilePage() {
     const { t } = useTranslation()
@@ -17,8 +14,6 @@ export default function ProfilePage() {
     const { stats } = useUserStats(user?.uid)
     const { bookmarkCount } = useBookmarks(user?.uid)
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-
-    const daysLeft = Math.max(0, differenceInDays(FEST_START, new Date()))
 
     const isLoggedIn = !!user
 
@@ -65,12 +60,7 @@ export default function ProfilePage() {
                             {isLoggedIn ? initials : '?'}
                         </div>
                     )}
-                    {/* Role Badge Overlay */}
-                    {isLoggedIn && profile?.roles && (
-                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 shadow-sm w-full max-w-[200px]">
-                            <RoleBadge role={profile.roles} />
-                        </div>
-                    )}
+                    {/* Role Badge Overlay — removed from avatar to prevent overlap */}
                 </div>
 
                 <h2 className="text-xl font-bold text-gray-900 mt-4">{displayName}</h2>
@@ -78,6 +68,13 @@ export default function ProfilePage() {
                     <p className="text-sm text-gray-500 font-medium">{displayEmail}</p>
                 ) : (
                     <p className="text-sm text-gray-500 font-medium">Sign in to access all features</p>
+                )}
+
+                {/* Role Badges - below name/email */}
+                {isLoggedIn && profile?.roles && profile.roles.length > 0 && (
+                    <div className="mt-2">
+                        <RoleBadge role={profile.roles} />
+                    </div>
                 )}
 
                 {/* Sign In / Sign Out Button */}
@@ -104,11 +101,15 @@ export default function ProfilePage() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-3 gap-3 mt-6 mb-8">
                     {[
-                        { label: t('profile.events'), value: String(stats.eventsRegistered) },
-                        { label: t('profile.saved'), value: String(bookmarkCount) },
-                        { label: t('profile.points'), value: String(daysLeft) },
-                    ].map(({ label, value }) => (
-                        <div key={label} className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                        { label: t('profile.events'), value: String(stats.eventsRegistered), to: '/schedule?view=registered' },
+                        { label: t('profile.saved'), value: String(bookmarkCount), to: '/schedule?view=saved' },
+                        { label: t('profile.stallsVisited'), value: String(stats.stallsVisited), to: '/stalls?view=saved' },
+                    ].map(({ label, value, to }) => (
+                        <div
+                            key={label}
+                            onClick={() => navigate(to)}
+                            className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm cursor-pointer active:scale-[0.97] transition-transform"
+                        >
                             <div className="text-xl font-bold text-gray-900">{value}</div>
                             <div className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">{label}</div>
                         </div>

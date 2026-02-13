@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/useAuthStore'
-import { useBookmarks } from '@/lib/useData'
+import { useBookmarks, useRegistration } from '@/lib/useData'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import type { Event } from '@/types/database'
@@ -22,6 +22,7 @@ export default function EventDetailPage() {
     const { t } = useTranslation()
     const { user } = useAuthStore()
     const { isBookmarked, toggleBookmark } = useBookmarks(user?.uid)
+    const { isRegistered, toggling: regToggling, toggleRegistration } = useRegistration(user?.uid, id)
     const [event, setEvent] = useState<Event | null>(null)
     const [loading, setLoading] = useState(true)
     const [bookmarking, setBookmarking] = useState(false)
@@ -207,6 +208,43 @@ export default function EventDetailPage() {
                         {event.current_registrations}{event.max_participants ? `/${event.max_participants}` : ''} going
                     </div>
                 </div>
+            </div>
+
+            {/* Self-Report Registration */}
+            <div className="px-4 mt-4">
+                <button
+                    onClick={async () => {
+                        if (!user) {
+                            toast('Please sign in first', { icon: '🔒' })
+                            return
+                        }
+                        const nowRegistered = await toggleRegistration()
+                        toast.success(nowRegistered ? 'Marked as registered! ✅' : 'Registration removed')
+                    }}
+                    disabled={regToggling}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all press-effect ${isRegistered
+                            ? 'bg-green-50 border-green-200'
+                            : 'bg-white border-gray-100 shadow-sm'
+                        } disabled:opacity-60`}
+                >
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isRegistered ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400'
+                        }`}>
+                        <Icon icon={isRegistered ? 'solar:check-circle-bold' : 'solar:question-circle-linear'} width={20} />
+                    </div>
+                    <div className="text-left">
+                        <div className={`text-sm font-semibold ${isRegistered ? 'text-green-700' : 'text-gray-700'}`}>
+                            {isRegistered ? 'You\'re registered!' : 'Did you register?'}
+                        </div>
+                        <div className="text-[10px] text-gray-400">
+                            {isRegistered ? 'Tap to unmark' : 'Tap to mark yourself as registered'}
+                        </div>
+                    </div>
+                    <Icon
+                        icon={isRegistered ? 'solar:check-circle-bold' : 'solar:add-circle-linear'}
+                        width={20}
+                        className={`ml-auto flex-shrink-0 ${isRegistered ? 'text-green-500' : 'text-gray-300'}`}
+                    />
+                </button>
             </div>
 
             {/* Department & Tags */}

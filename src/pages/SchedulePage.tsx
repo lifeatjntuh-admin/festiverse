@@ -3,7 +3,9 @@ import { Icon } from '@iconify/react'
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { useEventsByDay } from '@/lib/useData'
+import { useEventsByDay, useBookmarks, useAllEvents } from '@/lib/useData'
+import { useAuthStore } from '@/lib/useAuthStore'
+import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 
 const DAYS = ['day1', 'day2'] as const
@@ -40,8 +42,12 @@ const TAG_COLORS: Record<string, string> = {
 
 export default function SchedulePage() {
     const { t } = useTranslation()
-    const [searchParams] = useSearchParams()
+    const [searchParams, setSearchParams] = useSearchParams()
+    const { user } = useAuthStore()
     const [activeDay, setActiveDay] = useState<typeof DAYS[number]>('day1')
+
+    // View mode: normal schedule, registered events, or saved events
+    const viewMode = searchParams.get('view') as 'registered' | 'saved' | null
 
     // Initialize filter from URL ?category= param
     const urlCategory = searchParams.get('category')
@@ -58,53 +64,106 @@ export default function SchedulePage() {
     }, [urlCategory])
 
     const { events, loading } = useEventsByDay(activeDay)
+    const { events: allEvents, loading: allEventsLoading } = useAllEvents()
+    const { bookmarks } = useBookmarks(user?.uid)
 
-    // Filter events by category
-    const filteredEvents = activeFilter === 'allEvents'
-        ? events
-        : events.filter((e) => e.category === FILTER_CATEGORY_MAP[activeFilter])
+    // Registered event IDs
+    const [registeredIds, setRegisteredIds] = useState<string[]>([])
+    useEffect(() => {
+        if (!user?.uid || viewMode !== 'registered') return
+        supabase
+            .from('event_registrations')
+            .select('event_id')
+            .eq('user_id', user.uid)
+            .then(({ data }) => {
+                setRegisteredIds((data ?? []).map(r => r.event_id))
+            })
+    }, [user?.uid, viewMode])
+
+    // Determine which events to show
+    const getFilteredEvents = () => {
+        if (viewMode === 'saved') {
+            const savedEventIds = bookmarks.filter(b => b.type === 'event').map(b => b.event_id)
+            return allEvents.filter(e => savedEventIds.includes(e.id))
+        }
+        if (viewMode === 'registered') {
+            return allEvents.filter(e => registeredIds.includes(e.id))
+        }
+        // Normal mode: filter by day + category
+        return activeFilter === 'allEvents'
+            ? events
+            : events.filter((e) => e.category === FILTER_CATEGORY_MAP[activeFilter])
+    }
+
+    const filteredEvents = getFilteredEvents()
+    const isViewMode = viewMode === 'saved' || viewMode === 'registered'
+    const viewLoading = isViewMode ? allEventsLoading : loading
 
     return (
         <div className="animate-fade-in">
-            {/* Day Tabs */}
-            <div className="flex border-b border-gray-100 px-4 sticky top-0 bg-gray-50 z-10">
-                {DAYS.map((day) => (
+            {isViewMode ? (
+                /* View Mode Banner */
+                <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 sticky top-0 z-10">
+                    <div className="flex items-center gap-2">
+                        <Icon
+                            icon={viewMode === 'saved' ? 'solar:bookmark-bold' : 'solar:check-circle-bold'}
+                            width={18}
+                            className={viewMode === 'saved' ? 'text-primary-600' : 'text-green-500'}
+                        />
+                        <h3 className="text-sm font-bold text-gray-800">
+                            {viewMode === 'saved' ? 'Saved Events' : 'Registered Events'}
+                        </h3>
+                    </div>
                     <button
-                        key={day}
-                        onClick={() => setActiveDay(day)}
-                        className={cn(
-                            'flex-1 py-3 text-sm font-semibold transition-all duration-200 border-b-2',
-                            activeDay === day
-                                ? 'text-primary-600 border-primary-600'
-                                : 'text-gray-400 border-transparent hover:text-gray-600'
-                        )}
+                        onClick={() => setSearchParams({})}
+                        className="text-xs font-semibold text-primary-600 px-3 py-1 rounded-full bg-primary-50 active:scale-95 transition-transform"
                     >
-                        {t(`schedule.${day}`)}
+                        Show All
                     </button>
-                ))}
-            </div>
+                </div>
+            ) : (
+                <>
+                    {/* Day Tabs */}
+                    <div className="flex border-b border-gray-100 px-4 sticky top-0 bg-gray-50 z-10">
+                        {DAYS.map((day) => (
+                            <button
+                                key={day}
+                                onClick={() => setActiveDay(day)}
+                                className={cn(
+                                    'flex-1 py-3 text-sm font-semibold transition-all duration-200 border-b-2',
+                                    activeDay === day
+                                        ? 'text-primary-600 border-primary-600'
+                                        : 'text-gray-400 border-transparent hover:text-gray-600'
+                                )}
+                            >
+                                {t(`schedule.${day}`)}
+                            </button>
+                        ))}
+                    </div>
 
-            {/* Filter Chips */}
-            <div className="flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar">
-                {FILTERS.map((filter) => (
-                    <button
-                        key={filter}
-                        onClick={() => setActiveFilter(filter)}
-                        className={cn(
-                            'flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200',
-                            activeFilter === filter
-                                ? 'bg-primary-600 text-white shadow-glow'
-                                : 'bg-white text-gray-600 border border-gray-200 hover:border-primary-300'
-                        )}
-                    >
-                        {t(`schedule.${filter}`)}
-                    </button>
-                ))}
-            </div>
+                    {/* Filter Chips */}
+                    <div className="flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar">
+                        {FILTERS.map((filter) => (
+                            <button
+                                key={filter}
+                                onClick={() => setActiveFilter(filter)}
+                                className={cn(
+                                    'flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200',
+                                    activeFilter === filter
+                                        ? 'bg-primary-600 text-white shadow-glow'
+                                        : 'bg-white text-gray-600 border border-gray-200 hover:border-primary-300'
+                                )}
+                            >
+                                {t(`schedule.${filter}`)}
+                            </button>
+                        ))}
+                    </div>
+                </>
+            )}
 
             {/* Timeline */}
             <div className="px-4 mt-2">
-                {loading ? (
+                {viewLoading ? (
                     <div className="relative pl-6 border-l-2 border-gray-200 space-y-6">
                         {Array.from({ length: 4 }).map((_, i) => (
                             <div key={i} className="relative">
