@@ -40,7 +40,7 @@ function TeamList({ event }: { event: Event }) {
 
     return (
         <div className="px-4 mt-6">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Meet the Team</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">{t('event.teamTitle')}</h3>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
                 {team.map(member => (
                     <div key={member.id} className="flex flex-col items-center flex-shrink-0 w-20">
@@ -102,7 +102,7 @@ export default function EventDetailPage() {
         if (!event) return
         const shareData = {
             title: event.title,
-            text: `Check out ${event.title} at Festiverse!`,
+            text: t('event.shareText', { title: event.title }),
             url: window.location.href,
         }
         try {
@@ -178,7 +178,7 @@ export default function EventDetailPage() {
                         <span className="text-xs font-semibold text-white">{t('event.youAreOrganizer')}</span>
                     </div>
                 )}
-                <div className="absolute bottom-4 left-4 right-4">
+                <div className="absolute bottom-14 left-4 right-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${CATEGORY_COLORS[event.category] || 'bg-white/20 text-white'}`}>
                         {t(`categories.${event.category}`, { defaultValue: event.category.charAt(0).toUpperCase() + event.category.slice(1) })}
                     </span>
@@ -193,15 +193,15 @@ export default function EventDetailPage() {
                 {event.registration_required ? (
                     <button
                         onClick={() => {
-                                if (!user) {
-                                    toast(t('stalls.pleaseSignIn') || 'Please sign in to register', { icon: '🔒' })
-                                    return
-                                }
-                                if (event.registration_link) {
-                                    window.open(event.registration_link, '_blank')
-                                } else {
-                                    toast.success(t('event.registrationComingSoon'))
-                                }
+                            if (!user) {
+                                toast(t('stalls.pleaseSignIn') || 'Please sign in to register', { icon: '🔒' })
+                                return
+                            }
+                            if (event.registration_link) {
+                                window.open(event.registration_link, '_blank')
+                            } else {
+                                toast.success(t('event.registrationComingSoon'))
+                            }
                         }}
                         className="flex-1 py-3 bg-primary-600 text-white rounded-xl font-semibold text-sm shadow-glow press-effect"
                     >
@@ -209,7 +209,7 @@ export default function EventDetailPage() {
                     </button>
                 ) : (
                     <div className="flex-1 py-3 bg-green-500 text-white rounded-xl font-semibold text-sm text-center shadow-sm">
-                        Open for All 🎉
+                        {t('event.openForAll')}
                     </div>
                 )}
                 <button
@@ -255,7 +255,7 @@ export default function EventDetailPage() {
                     <Icon icon="solar:users-group-rounded-linear" width={16} className="text-primary mb-1" />
                     <div className="text-xs text-gray-500 dark:text-gray-400">{t('event.registrations', { count: event.current_registrations ?? 0 })}</div>
                     <div className="text-sm font-semibold text-card-foreground">
-                        {event.current_registrations}{event.max_participants ? `/${event.max_participants}` : ''} going
+                        {event.current_registrations}{event.max_participants ? `/${event.max_participants}` : ''} {t('event.goingSuffix')}
                     </div>
                 </div>
             </div>
@@ -283,10 +283,12 @@ export default function EventDetailPage() {
                     </div>
                     <div className="text-left">
                         <div className={`text-sm font-semibold ${isRegistered ? 'text-green-600' : 'text-card-foreground'}`}>
-                            {isRegistered ? 'You\'re registered!' : 'Did you register?'}
+                            {isRegistered
+                                ? t('event.registeredYou')
+                                : (!event.is_paid ? t('event.areYouGoing') : t('event.didYouRegister'))}
                         </div>
                         <div className="text-[10px] text-muted-foreground">
-                            {isRegistered ? 'Tap to unmark' : 'Tap to mark yourself as registered'}
+                            {isRegistered ? t('event.tapToUnmark') : t('event.tapToMark')}
                         </div>
                     </div>
                     <Icon

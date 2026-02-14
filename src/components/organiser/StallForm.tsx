@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from '@iconify/react'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/lib/useAuthStore'
 import {
     createStall,
@@ -26,10 +27,10 @@ function lsRemove(key: string) {
 }
 
 const STALL_CATEGORIES = [
-    { value: 'food', label: 'Food' },
-    { value: 'merchandise', label: 'Merchandise' },
-    { value: 'club', label: 'Club' },
-    { value: 'sponsor', label: 'Sponsor' },
+    { value: 'food', labelKey: 'categories.food' },
+    { value: 'merchandise', labelKey: 'stalls.merch' },
+    { value: 'club', labelKey: 'stalls.club' },
+    { value: 'sponsor', labelKey: 'stalls.sponsor' },
 ]
 
 interface StallFormProps {
@@ -43,6 +44,7 @@ interface StallFormProps {
 export default function StallForm({ formId, stall, onSaved, minimized, pillIndex }: StallFormProps) {
     const { user } = useAuthStore()
     const { closeForm, toggleMinimize } = useFormStore()
+    const { t } = useTranslation()
 
     // We need userId for creation
     const userId = user?.uid
@@ -76,8 +78,8 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
         try {
             const url = await uploadImage(file)
             set('imageUrls', [...form.imageUrls, url])
-            toast.success('Image uploaded!')
-        } catch { toast.error('Image upload failed') }
+            toast.success(t('stallForm.imageUploaded'))
+        } catch { toast.error(t('stallForm.imageUploadFailed')) }
         setUploading(false)
     }
 
@@ -86,9 +88,9 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
     }
 
     const handleSubmit = async () => {
-        if (!userId) { toast.error('You must be logged in'); return }
+        if (!userId) { toast.error(t('stallForm.mustBeLoggedIn')); return }
         if (!form.name || !form.location) {
-            toast.error('Name and location are required'); return
+            toast.error(t('stallForm.nameLocationRequired')); return
         }
         setSaving(true)
         const contactInfo: any = {}
@@ -109,9 +111,9 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
             result = await createStall(payload)
         }
         if (result.error) {
-            toast.error(`Failed to ${isEdit ? 'update' : 'create'} stall`); console.error(result.error)
+            toast.error(t('stallForm.failedToSave', { action: isEdit ? 'update' : 'create' })); console.error(result.error)
         } else {
-            toast.success(isEdit ? 'Stall updated!' : 'Stall created!')
+            toast.success(isEdit ? t('stallForm.stallUpdated') : t('stallForm.stallCreated'))
             lsRemove(lsKey)
             onSaved?.()
             closeForm(formId)
@@ -134,8 +136,8 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
                         <Icon icon="solar:shop-2-bold" width={18} />
                     </div>
                     <div className="flex-1 text-left min-w-0">
-                        <div className="text-sm font-bold truncate">{form.name || (isEdit ? 'Editing Stall' : 'New Stall')}</div>
-                        <div className="text-[10px] text-white/70">Tap to continue editing</div>
+                        <div className="text-sm font-bold truncate">{form.name || (isEdit ? t('stallForm.editing') : t('stallForm.new'))}</div>
+                        <div className="text-[10px] text-white/70">{t('stallForm.tapToContinueEditing')}</div>
                     </div>
                     <Icon icon="solar:maximize-square-linear" width={20} className="text-white/80 flex-shrink-0" />
                 </button>
@@ -153,9 +155,9 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
                     <button onClick={handleClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-muted rounded-full transition-colors">
                         <Icon icon="solar:close-circle-linear" width={22} className="text-gray-400 dark:text-muted-foreground" />
                     </button>
-                    <h2 className="font-bold text-gray-900 dark:text-foreground text-base">{isEdit ? 'Edit Stall' : 'Create Stall'}</h2>
+                    <h2 className="font-bold text-gray-900 dark:text-foreground text-base">{isEdit ? t('stallForm.updateStall') : t('stallForm.createStall')}</h2>
                 </div>
-                <button onClick={onToggleMinimize} className="p-2 hover:bg-gray-100 dark:hover:bg-muted rounded-full transition-colors" title="Minimize — your progress is saved">
+                <button onClick={onToggleMinimize} className="p-2 hover:bg-gray-100 dark:hover:bg-muted rounded-full transition-colors" title={t('organiser.minimize')}>
                     <Icon icon="solar:minimize-square-linear" width={20} className="text-gray-500 dark:text-muted-foreground" />
                 </button>
             </div>
@@ -164,30 +166,30 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
             <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 space-y-4">
                 {/* Name */}
                 <div>
-                    <label className={LABEL}>Name *</label>
-                    <input type="text" value={form.name} onChange={e => set('name', e.target.value)} className={INPUT} placeholder="Stall name" />
+                    <label className={LABEL}>{t('stallForm.nameLabel')} *</label>
+                    <input type="text" value={form.name} onChange={e => set('name', e.target.value)} className={INPUT} placeholder={t('stallForm.namePlaceholder')} />
                 </div>
                 {/* Category */}
                 <div>
-                    <label className={LABEL}>Category</label>
+                    <label className={LABEL}>{t('stallForm.categoryLabel')}</label>
                     <select value={form.category} onChange={e => set('category', e.target.value)} className={`${INPUT} bg-white dark:bg-background`}>
-                        {STALL_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                        {STALL_CATEGORIES.map(c => <option key={c.value} value={c.value}>{t(c.labelKey)}</option>)}
                     </select>
                 </div>
                 {/* Location */}
                 <div>
-                    <label className={LABEL}>Location *</label>
-                    <input type="text" value={form.location} onChange={e => set('location', e.target.value)} className={INPUT} placeholder="e.g. Near Main Gate, Stall #5" />
+                    <label className={LABEL}>{t('stallForm.locationLabel')} *</label>
+                    <input type="text" value={form.location} onChange={e => set('location', e.target.value)} className={INPUT} placeholder={t('stallForm.locationPlaceholder')} />
                 </div>
                 {/* Description */}
                 <div>
-                    <label className={LABEL}>Description</label>
+                    <label className={LABEL}>{t('stallForm.descriptionLabel')}</label>
                     <textarea value={form.description} onChange={e => set('description', e.target.value)}
-                        className={`${INPUT} resize-none`} rows={3} placeholder="Describe what your stall offers..." />
+                        className={`${INPUT} resize-none`} rows={3} placeholder={t('stallForm.descriptionPlaceholder')} />
                 </div>
                 {/* Images */}
                 <div>
-                    <label className={LABEL}>Images</label>
+                    <label className={LABEL}>{t('stallForm.imagesLabel')}</label>
                     {form.imageUrls.length > 0 && (
                         <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
                             {form.imageUrls.map((url: string, i: number) => (
@@ -204,8 +206,8 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
                         <button type="button" onClick={() => stallFileRef.current?.click()} disabled={uploading}
                             className="flex-1 py-2.5 border-2 border-dashed border-gray-200 dark:border-border rounded-xl text-sm text-gray-500 dark:text-muted-foreground font-medium hover:border-primary-300 hover:text-primary-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
                             {uploading
-                                ? <><Icon icon="solar:loading-bold" width={16} className="animate-spin" /> Uploading...</>
-                                : <><Icon icon="solar:camera-add-linear" width={16} /> Add Image</>}
+                            ? <><Icon icon="solar:loading-bold" width={16} className="animate-spin" /> {t('stallForm.uploading')}</>
+                            : <><Icon icon="solar:camera-add-linear" width={16} /> {t('stallForm.addImage')}</>}
                         </button>
                         <button type="button" onClick={() => setShowUrlInput(!showUrlInput)}
                             className="px-3 py-2.5 border border-gray-200 dark:border-border rounded-xl text-gray-500 dark:text-muted-foreground hover:bg-gray-50 dark:hover:bg-muted transition-colors">
@@ -214,21 +216,21 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
                     </div>
                     {showUrlInput && (
                         <div className="flex gap-2 mt-2">
-                            <input type="url" id={`stall-url-${formId}`} className={`flex-1 ${INPUT}`} placeholder="Paste image URL..." />
-                            <button type="button" onClick={() => {
+                            <input type="url" id={`stall-url-${formId}`} className={`flex-1 ${INPUT}`} placeholder={t('stallForm.pasteImageUrlPlaceholder')} />
+                                <button type="button" onClick={() => {
                                 const input = document.getElementById(`stall-url-${formId}`) as HTMLInputElement
                                 if (input?.value) { set('imageUrls', [...form.imageUrls, input.value]); input.value = '' }
-                            }} className="px-4 py-2.5 bg-primary-600 text-white rounded-xl text-xs font-semibold">Add</button>
+                                }} className="px-4 py-2.5 bg-primary-600 text-white rounded-xl text-xs font-semibold">{t('stallForm.add')}</button>
                         </div>
                     )}
                 </div>
                 {/* Contact Info */}
                 <div>
-                    <label className={`${LABEL} mb-1.5`}>Contact Info</label>
+                        <label className={`${LABEL} mb-1.5`}>{t('stallForm.contactInfoLabel')}</label>
                     <div className="space-y-2">
-                        <input type="tel" value={form.contact_phone} onChange={e => set('contact_phone', e.target.value)} className={INPUT} placeholder="📞 Phone number" />
-                        <input type="email" value={form.contact_email} onChange={e => set('contact_email', e.target.value)} className={INPUT} placeholder="📧 Email" />
-                        <input type="tel" value={form.contact_whatsapp} onChange={e => set('contact_whatsapp', e.target.value)} className={INPUT} placeholder="💬 WhatsApp number" />
+                            <input type="tel" value={form.contact_phone} onChange={e => set('contact_phone', e.target.value)} className={INPUT} placeholder={t('stallForm.contactPhonePlaceholder')} />
+                            <input type="email" value={form.contact_email} onChange={e => set('contact_email', e.target.value)} className={INPUT} placeholder={t('stallForm.contactEmailPlaceholder')} />
+                            <input type="tel" value={form.contact_whatsapp} onChange={e => set('contact_whatsapp', e.target.value)} className={INPUT} placeholder={t('stallForm.contactWhatsAppPlaceholder')} />
                     </div>
                 </div>
             </div>
@@ -238,7 +240,7 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
                 <button onClick={handleSubmit} disabled={saving}
                     className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-bold text-sm shadow-glow press-effect disabled:opacity-60 flex items-center justify-center gap-2">
                     {saving && <Icon icon="solar:loading-bold" width={18} className="animate-spin" />}
-                    {isEdit ? 'Update Stall' : 'Create Stall'}
+                    {isEdit ? t('stallForm.updateStall') : t('stallForm.createStall')}
                 </button>
             </div>
         </div>,

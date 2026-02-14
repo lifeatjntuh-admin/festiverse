@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Icon } from '@iconify/react'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 
 export default function NotFoundPage() {
+    const { t } = useTranslation()
     return (
         <div className="min-h-dvh bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Floating decorative blobs */}
@@ -32,12 +34,10 @@ export default function NotFoundPage() {
                     404
                 </h1>
                 <h2 className="text-xl font-bold text-white/90 font-display mb-3">
-                    Lost at the Fest?
+                    {t('notFound.title')}
                 </h2>
                 <p className="text-blue-100/80 text-sm leading-relaxed mb-8">
-                    Looks like this page wandered off to grab some
-                    <span className="text-secondary-300 font-semibold"> street food</span>.
-                    Let's get you back to the action! 🎪
+                    {t('notFound.paragraph')}
                 </p>
 
                 {/* Action buttons */}
@@ -47,14 +47,14 @@ export default function NotFoundPage() {
                         className="w-full flex items-center justify-center gap-2.5 bg-white text-primary-600 rounded-xl px-6 py-3.5 text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-200 active:scale-[0.98]"
                     >
                         <Icon icon="solar:home-smile-bold" width={18} />
-                        Back to Home
+                        {t('notFound.backToHome')}
                     </Link>
                     <Link
                         to="/schedule"
                         className="w-full flex items-center justify-center gap-2.5 bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded-xl px-6 py-3.5 text-sm font-semibold hover:bg-white/20 transition-all duration-200 active:scale-[0.98]"
                     >
                         <Icon icon="solar:calendar-bold" width={18} />
-                        View Schedule
+                        {t('notFound.viewSchedule')}
                     </Link>
                 </div>
 

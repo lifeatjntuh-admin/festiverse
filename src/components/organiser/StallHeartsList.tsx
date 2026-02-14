@@ -1,7 +1,9 @@
 import { Icon } from '@iconify/react'
 import { useStallBookmarks } from '@/lib/useData'
+import { useTranslation } from 'react-i18next'
 
 export function StallHeartsList({ stallId }: { stallId: string }) {
+    const { t } = useTranslation()
     const { bookmarks, loading } = useStallBookmarks(stallId)
 
     if (loading) return (
@@ -13,7 +15,7 @@ export function StallHeartsList({ stallId }: { stallId: string }) {
     if (bookmarks.length === 0) return (
         <div className="py-6 text-center">
             <Icon icon="solar:heart-broken-linear" width={32} className="text-muted-foreground mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">No hearts yet</p>
+            <p className="text-xs text-muted-foreground">{t('stallHearts.noHearts')}</p>
         </div>
     )
 
@@ -31,7 +33,7 @@ export function StallHeartsList({ stallId }: { stallId: string }) {
                                 : <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs font-bold">{bm.profile?.name?.[0]?.toUpperCase() || '?'}</div>}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-foreground truncate">{bm.profile?.name || 'Unknown'}</div>
+                            <div className="text-sm font-medium text-foreground truncate">{bm.profile?.name || t('stallHearts.unknown')}</div>
                             <div className="text-[10px] text-muted-foreground truncate">{bm.profile?.email}</div>
                         </div>
                         <div className="text-[10px] text-muted-foreground">

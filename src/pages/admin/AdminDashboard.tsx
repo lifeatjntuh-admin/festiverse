@@ -67,7 +67,7 @@ export default function AdminDashboard() {
     }
 
     const handleManageRole = async (userId: string, role: UserRole, action: 'add' | 'remove') => {
-        if (!confirm(`Are you sure you want to ${action} ${role} for this user?`)) return
+        if (!confirm(t('admin.confirmManageRole', { action, role }))) return
 
         setActionLoading(userId)
         try {
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
     }
 
     const handleApproveRequest = async (userId: string) => {
-        if (!confirm('Approve this role request?')) return
+        if (!confirm(t('admin.confirmApproveRequest'))) return
 
         setActionLoading(userId)
         try {
@@ -265,7 +265,7 @@ export default function AdminDashboard() {
                                 <>
                                     <div className="px-4 py-3 border-b border-gray-100 dark:border-border flex items-center justify-between bg-gray-50/50 dark:bg-muted/20">
                                         <div className="min-w-0">
-                                            <h3 className="font-bold text-gray-900 dark:text-foreground">Manage Roles</h3>
+                                            <h3 className="font-bold text-gray-900 dark:text-foreground">{t('admin.manageRoles')}</h3>
                                             <p className="text-xs text-gray-500 dark:text-muted-foreground truncate">{user.email}</p>
                                         </div>
                                         <button onClick={() => setEditingUser(null)} className="p-1 hover:bg-gray-200 dark:hover:bg-muted rounded-full transition-colors flex-shrink-0 ml-2">
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="px-4 py-3 border-t border-gray-100 dark:border-border bg-gray-50/30 dark:bg-muted/10 text-center">
                                         <p className="text-[10px] text-gray-400 dark:text-muted-foreground">
-                                            Tap to toggle roles. Changes are saved immediately.
+                                            {t('admin.tapToToggleRoles')}
                                         </p>
                                     </div>
                                 </>

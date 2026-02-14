@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from '@iconify/react'
+import { useTranslation } from 'react-i18next'
 import { useStallTeam, useSearchProfiles } from '@/lib/useData'
 import { useFormStore } from '@/lib/useFormStore'
 import { Stall } from '@/types/database'
@@ -15,6 +16,7 @@ interface StallTeamManagerPanelProps {
 
 export default function StallTeamManagerPanel({ formId, stall, minimized, pillIndex }: StallTeamManagerPanelProps) {
     const { closeForm, toggleMinimize } = useFormStore()
+    const { t } = useTranslation()
     const { members, loading, addMember, removeMember } = useStallTeam(stall.id)
     const [searchQuery, setSearchQuery] = useState('')
     const { profiles: searchResults, loading: searchLoading } = useSearchProfiles(searchQuery)
@@ -33,20 +35,20 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
     const handleAdd = async (userId: string) => {
         const { error } = await addMember(userId, targetRole)
         if (error) {
-            toast.error('Failed to add: ' + error.message)
+            toast.error(t('organiser.failedToAdd', { msg: error.message }))
             return
         }
         setSearchQuery('')
-        toast.success(`Team member added as ${targetRole === 'co_host' ? 'Co-Host' : 'Member'}`)
+        toast.success(t('organiser.teamMemberAddedAs', { role: targetRole === 'co_host' ? t('organiser.coHost') : t('event.roleMember') }))
     }
 
     const handleRemove = async (userId: string) => {
-        if (!confirm('Remove this team member?')) return
+        if (!confirm(t('organiser.confirmRemoveMember'))) return
         const { error } = await removeMember(userId)
         if (error) {
-            toast.error('Failed to remove: ' + error.message)
+            toast.error(t('organiser.failedToRemove', { msg: error.message }))
         } else {
-            toast.success('Team member removed')
+            toast.success(t('organiser.teamMemberRemoved'))
         }
     }
 
@@ -62,8 +64,8 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
                         <Icon icon="solar:users-group-two-rounded-bold" width={18} />
                     </div>
                     <div className="flex-1 text-left min-w-0">
-                        <div className="text-sm font-bold truncate">Team: {stall.name}</div>
-                        <div className="text-[10px] text-white/70">Tap to manage team</div>
+                        <div className="text-sm font-bold truncate">{t('organiser.teamPill', { title: stall.name })}</div>
+                        <div className="text-[10px] text-white/70">{t('organiser.tapToManageTeam')}</div>
                     </div>
                     <Icon icon="solar:maximize-square-linear" width={20} className="text-white/80 flex-shrink-0" />
                 </button>
@@ -80,11 +82,11 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
                         <Icon icon="solar:close-circle-linear" width={24} className="text-gray-400 dark:text-muted-foreground" />
                     </button>
                     <div className="min-w-0">
-                        <h3 className="font-bold text-gray-900 dark:text-foreground leading-tight">Manage Stall Team</h3>
+                        <h3 className="font-bold text-gray-900 dark:text-foreground leading-tight">{t('organiser.manageStallTeam')}</h3>
                         <p className="text-xs text-gray-500 dark:text-muted-foreground truncate">{stall.name}</p>
                     </div>
                 </div>
-                <button onClick={onToggleMinimize} className="p-2 hover:bg-gray-100 dark:hover:bg-muted rounded-full transition-colors" title="Minimize">
+                <button onClick={onToggleMinimize} className="p-2 hover:bg-gray-100 dark:hover:bg-muted rounded-full transition-colors" title={t('organiser.minimize')}>
                     <Icon icon="solar:minimize-square-linear" width={20} className="text-gray-500 dark:text-muted-foreground" />
                 </button>
             </div>
@@ -99,13 +101,13 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
                                 onClick={() => setTargetRole('member')}
                                 className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all ${targetRole === 'member' ? 'bg-white dark:bg-background shadow-sm text-gray-800 dark:text-foreground' : 'text-gray-400 dark:text-muted-foreground hover:text-gray-600 dark:hover:text-gray-300'}`}
                             >
-                                Member
+                                {t('event.roleMember')}
                             </button>
                             <button
                                 onClick={() => setTargetRole('co_host')}
                                 className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all ${targetRole === 'co_host' ? 'bg-white dark:bg-background shadow-sm text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-muted-foreground hover:text-gray-600 dark:hover:text-gray-300'}`}
                             >
-                                Co-Host
+                                {t('organiser.coHost')}
                             </button>
                         </div>
                     </label>
@@ -113,7 +115,7 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
                         <Icon icon="solar:magnifer-linear" className="absolute left-3 top-2.5 text-gray-400 dark:text-muted-foreground" width={18} />
                         <input
                             type="text"
-                            placeholder="Search by name or email..."
+                            placeholder={t('organiser.searchPlaceholder')}
                             className="w-full bg-gray-50 dark:bg-background border border-gray-200 dark:border-border rounded-xl py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -123,10 +125,10 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
                             <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto z-30">
                                 {searchLoading ? (
                                     <div className="p-4 text-center text-xs text-gray-400 dark:text-muted-foreground flex items-center justify-center gap-2">
-                                        <Icon icon="solar:spinner-linear" className="animate-spin" /> Searching...
+                                        <Icon icon="solar:spinner-linear" className="animate-spin" /> {t('organiser.searching')}
                                     </div>
                                 ) : searchResults.length === 0 ? (
-                                    <div className="p-4 text-center text-xs text-gray-400 dark:text-muted-foreground">No users found</div>
+                                    <div className="p-4 text-center text-xs text-gray-400 dark:text-muted-foreground">{t('organiser.noUsersFound')}</div>
                                 ) : (
                                     <div className="divide-y divide-gray-50 dark:divide-border">
                                         {searchResults.map(user => {
@@ -146,17 +148,17 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
                                                     </div>
 
                                                     {isOwner ? (
-                                                        <span className="text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">Owner</span>
+                                                        <span className="text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">{t('organiser.owner')}</span>
                                                     ) : existingMember ? (
                                                         <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
-                                                            {existingMember.role === 'co_host' ? 'Co-Host' : 'Added'}
+                                                            {existingMember.role === 'co_host' ? t('organiser.coHostShort') : t('organiser.added')}
                                                         </span>
                                                     ) : (
                                                         <button
                                                             onClick={() => handleAdd(user.id)}
                                                             className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 bg-primary-50 text-primary-600 rounded-lg text-xs font-bold hover:bg-primary-100 active:scale-95"
                                                         >
-                                                            Add
+                                                            {t('common.add')}
                                                         </button>
                                                     )}
                                                 </div>
@@ -170,7 +172,7 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
                     {targetRole === 'co_host' && (
                         <div className="text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-500/10 p-2 rounded-lg border border-amber-100 dark:border-amber-500/20 flex gap-2 items-start">
                             <Icon icon="solar:info-circle-bold" className="mt-0.5 flex-shrink-0" />
-                            Note: User must explicitly have 'Stall Manager' role to be assigned as a Co-Host.
+                            {t('organiser.roleRequirementNote', { role: t('profile.roleStallManager') })}
                         </div>
                     )}
                 </div>
@@ -185,8 +187,8 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
                     {members.length === 0 && !loading ? (
                         <div className="text-center py-8 bg-gray-50/50 dark:bg-muted/10 rounded-xl border border-dashed border-gray-200 dark:border-border">
                             <Icon icon="solar:users-group-two-rounded-linear" className="mx-auto text-gray-300 dark:text-muted-foreground mb-2" width={32} />
-                            <p className="text-xs text-gray-400 dark:text-muted-foreground">No team members yet</p>
-                            <p className="text-[10px] text-gray-300 dark:text-muted-foreground/70">Add members above to get help</p>
+                            <p className="text-xs text-gray-400 dark:text-muted-foreground">{t('organiser.noTeamMembersYet')}</p>
+                            <p className="text-[10px] text-gray-300 dark:text-muted-foreground/70">{t('organiser.addMembersHelp')}</p>
                         </div>
                     ) : (
                         <div className="space-y-2">
