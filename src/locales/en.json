@@ -344,6 +344,7 @@
     "admin": {
         "loading": "Loading Admin Dashboard...",
         "title": "Admin Dashboard",
+        "appSettings": "App Settings",
         "manageUsers": "Manage users and roles",
         "totalUsers": "Total Users",
         "admins": "Admins",

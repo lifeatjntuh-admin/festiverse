@@ -7,10 +7,8 @@ import FormOverlayManager from '@/components/organiser/FormOverlayManager'
 import { ModeToggle } from '@/components/mode-toggle'
 import { useScheduleStore } from '@/lib/useScheduleStore'
 import { format } from 'date-fns'
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import { DEFAULT_FEST_DATES } from '@/lib/useData'
-import type { FestDates } from '@/types/database'
+
+import { useAppSettings } from '@/lib/useAppSettings'
 
 const NAV_ITEMS = [
     { key: 'home', path: '/', iconLinear: 'solar:home-smile-linear', iconBold: 'solar:home-smile-bold' },
@@ -23,20 +21,7 @@ export default function AppLayout() {
     const { t } = useTranslation()
     const location = useLocation()
     const { activeDay, setActiveDay } = useScheduleStore()
-    const [festDates, setFestDates] = useState<FestDates>(DEFAULT_FEST_DATES)
-
-    useEffect(() => {
-        supabase
-            .from('app_settings')
-            .select('value')
-            .eq('key', 'fest_dates')
-            .single()
-            .then(({ data }) => {
-                if (data?.value) {
-                    setFestDates(data.value as FestDates)
-                }
-            })
-    }, [])
+    const { appName, festDates } = useAppSettings()
 
     const isSchedulePage = location.pathname === '/schedule'
 
@@ -51,8 +36,11 @@ export default function AppLayout() {
                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-600 to-primary-400 flex items-center justify-center text-white font-display font-bold text-sm tracking-tight shadow-glow">
                         FV
                     </div>
-                    <span className="font-display font-semibold text-lg tracking-tight text-foreground hidden md:block">
-                        {t('app.name')}
+                    <span className={cn(
+                        "font-display font-semibold text-lg tracking-tight text-foreground transition-all",
+                        isSchedulePage ? "hidden md:block" : "block"
+                    )}>
+                        {appName || t('app.name')}
                     </span>
                 </div>
 

@@ -5,8 +5,7 @@ import { useFeaturedEvents, useAllEvents, useBookmarks } from '@/lib/useData'
 import { useAuthStore } from '@/lib/useAuthStore'
 import { format, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns'
 
-// Fest start date
-const FEST_START = new Date('2026-03-15T09:00:00+05:30')
+import { useAppSettings } from '@/lib/useAppSettings'
 
 function useCountdown(target: Date) {
     const now = new Date()
@@ -37,7 +36,8 @@ export default function HomePage() {
     const { events: featured, loading: featuredLoading } = useFeaturedEvents()
     const { events: allEvents, loading: allLoading } = useAllEvents()
     const { bookmarkCount } = useBookmarks(user?.uid)
-    const countdown = useCountdown(FEST_START)
+    const { festDates } = useAppSettings()
+    const countdown = useCountdown(new Date(festDates.day1.start))
 
     // Trending = non-featured events with most registrations
     const trending = allEvents
