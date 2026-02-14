@@ -252,7 +252,7 @@ export default function EventDetailPage() {
                 </div>
                 <div className="bg-card rounded-xl p-3 shadow-sm border border-border">
                     <Icon icon="solar:users-group-rounded-linear" width={16} className="text-primary mb-1" />
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('event.registrations', { count: '' })}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('event.registrations', { count: event.current_registrations ?? 0 })}</div>
                     <div className="text-sm font-semibold text-card-foreground">
                         {event.current_registrations}{event.max_participants ? `/${event.max_participants}` : ''} going
                     </div>
