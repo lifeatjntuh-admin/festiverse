@@ -1,0 +1,139 @@
+import * as Dialog from '@radix-ui/react-dialog'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Icon } from '@iconify/react'
+import { format } from 'date-fns'
+import { Link } from 'react-router-dom'
+import { cn } from '@/lib/utils'
+import type { Event } from '@/types/database'
+import { useTranslation } from 'react-i18next'
+
+interface EventQuickViewProps {
+    event: Event | null
+    isOpen: boolean
+    onClose: () => void
+    onBookmarkToggle: (eventId: string) => void
+    isBookmarked: boolean
+}
+
+export default function EventQuickView({ event, isOpen, onClose, onBookmarkToggle, isBookmarked }: EventQuickViewProps) {
+    const { t } = useTranslation()
+
+    if (!event) return null
+
+    return (
+        <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <AnimatePresence>
+                {isOpen && (
+                    <Dialog.Portal forceMount>
+                        <Dialog.Overlay asChild>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+                            />
+                        </Dialog.Overlay>
+                        <Dialog.Content asChild>
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                transition={{ duration: 0.2, type: 'spring', damping: 20, stiffness: 300 }}
+                                className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] p-4 focus:outline-none"
+                            >
+                                <div className="bg-card text-card-foreground rounded-2xl shadow-xl overflow-hidden border border-border relative">
+                                    {/* Close Button */}
+                                    <button
+                                        onClick={onClose}
+                                        className="absolute top-3 right-3 z-20 p-2 bg-black/20 hover:bg-black/30 text-white rounded-full backdrop-blur-md transition-colors"
+                                    >
+                                        <Icon icon="solar:close-circle-bold" width={24} />
+                                    </button>
+
+                                    {/* Image Header */}
+                                    <div className="relative h-48 w-full bg-muted">
+                                        {event.image_url ? (
+                                            <img
+                                                src={event.image_url}
+                                                alt={event.title}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                                                <Icon icon="solar:calendar-bold-duotone" width={48} className="text-primary/40" />
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+
+                                        <div className="absolute bottom-3 left-4 right-4">
+                                            <div className="inline-block px-2 py-0.5 rounded-full bg-primary/90 text-primary-foreground text-xs font-semibold mb-2 shadow-sm uppercase tracking-wide">
+                                                {t(`schedule.${event.category}`)}
+                                            </div>
+                                            <Dialog.Title className="text-xl font-bold text-white leading-tight drop-shadow-sm">
+                                                {event.title}
+                                            </Dialog.Title>
+                                        </div>
+                                    </div>
+
+                                    {/* Details Body */}
+                                    <div className="p-5 space-y-4">
+                                        <div className="flex items-start gap-3 text-xs font-mono">
+                                            <Icon icon="solar:clock-circle-bold" className="text-primary mt-0.5 flex-shrink-0" width={18} />
+                                            <div>
+                                                <div className="font-semibold text-xs">{format(new Date(event.start_time), 'EEEE, MMMM d')}</div>
+                                                <div className="text-muted-foreground text-xs">
+                                                    {format(new Date(event.start_time), 'h:mm a')} - {format(new Date(event.end_time), 'h:mm a')}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-3 text-xs font-mono">
+                                            <Icon icon="solar:map-point-bold" className="text-primary mt-0.5 flex-shrink-0" width={18} />
+                                            <div>
+                                                <div className="font-semibold text-xs">{event.location}</div>
+                                                {event.venue_details?.building && (
+                                                    <div className="text-muted-foreground text-xs">{event.venue_details.building}, {event.venue_details.room}</div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {event.description && (
+                                            <Dialog.Description className="text-xs text-muted-foreground line-clamp-3 mt-2 leading-relaxed font-mono">
+                                                {event.description}
+                                            </Dialog.Description>
+                                        )}
+
+                                        {/* Actions */}
+                                        <div className="flex gap-3 pt-2 mt-4 border-t border-border">
+                                            <button
+                                                onClick={() => onBookmarkToggle(event.id)}
+                                                className={cn(
+                                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium transition-all active:scale-95 border",
+                                                    isBookmarked
+                                                        ? "bg-primary/10 text-primary border-primary/20"
+                                                        : "bg-secondary/50 text-secondary-foreground border-transparent hover:bg-secondary"
+                                                )}
+                                            >
+                                                <Icon icon={isBookmarked ? "solar:bookmark-bold" : "solar:bookmark-linear"} width={20} />
+                                                {isBookmarked ? t('common.saved') : t('common.save')}
+                                            </button>
+
+                                            <Link
+                                                to={`/events/${event.id}`}
+                                                className="flex-[2] flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all"
+                                            >
+                                                <span>{t('event.viewDetails')}</span>
+                                                <Icon icon="solar:arrow-right-bold" width={18} />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </Dialog.Content>
+                    </Dialog.Portal>
+                )}
+            </AnimatePresence>
+        </Dialog.Root>
+    )
+}

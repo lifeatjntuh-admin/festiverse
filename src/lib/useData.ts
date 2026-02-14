@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from './supabase'
 import type { Event, Stall, Bookmark, EventRegistration, Profile, UserRole, FestDates } from '@/types/database'
 
-const DEFAULT_FEST_DATES: FestDates = {
+export const DEFAULT_FEST_DATES: FestDates = {
     day1: { start: '2026-03-15T00:00:00+05:30', end: '2026-03-15T23:59:59+05:30' },
     day2: { start: '2026-03-16T00:00:00+05:30', end: '2026-03-16T23:59:59+05:30' },
 }

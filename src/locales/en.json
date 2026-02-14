@@ -51,13 +51,15 @@
         "registered": "Registered Events",
         "technical": "Technical",
         "cultural": "Cultural",
+        "workshop": "Workshop",
         "workshops": "Workshops",
         "tech": "Tech",
         "sports": "Sports",
         "food": "Food",
         "noEvents": "No {{category}} events on this day",
         "noFilterResults": "No events for this filter",
-        "comingSoon": "Schedule will be updated soon"
+        "comingSoon": "Schedule will be updated soon",
+        "going": "Going"
     },
     "stalls": {
         "filter": "Filter",
@@ -155,6 +157,7 @@
     "auth": {
         "welcome": "Welcome to Festiverse",
         "subtitle": "Discover events, plan your schedule, and never miss a moment",
+        "signIn": "Sign In",
         "signInWithGoogle": "Sign in with Google",
         "signingIn": "Signing in...",
         "signInFailed": "Sign-in failed. Please try again.",
@@ -194,7 +197,8 @@
         "areYouSure": "Are you sure?",
         "saveChanges": "Save Changes",
         "you": "(You)",
-        "youBrackets": "(You)"
+        "youBrackets": "(You)",
+        "signInRequired": "Sign In Required"
     },
     "organiser": {
         "unauthorized": "Unauthorized",

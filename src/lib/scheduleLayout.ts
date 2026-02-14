@@ -9,8 +9,8 @@ export interface LayoutEvent extends Event {
 
 // Constants for layout
 const HOUR_HEIGHT = 80 // Pixels per hour
-const START_HOUR = 8 // Start at 8 AM
-const END_HOUR = 22 // End at 10 PM
+const START_HOUR = 0 // Start at 12 AM
+const END_HOUR = 24 // End at 12 AM (next day)
 
 /**
  * Calculates position and size for events in a vertical timeline.

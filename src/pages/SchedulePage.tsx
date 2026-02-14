@@ -1,16 +1,21 @@
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { useEventsByDay, useBookmarks, useAllEvents } from '@/lib/useData'
+import { useEventsByDay, useBookmarks } from '@/lib/useData'
 import { useAuthStore } from '@/lib/useAuthStore'
 import { supabase } from '@/lib/supabase'
+import { useScheduleStore } from '@/lib/useScheduleStore'
 import { format } from 'date-fns'
 import { calculateEventPositions, HOUR_HEIGHT, START_HOUR, END_HOUR } from '@/lib/scheduleLayout'
+import toast from 'react-hot-toast'
 
-const DAYS = ['day1', 'day2'] as const
-const FILTERS = ['allEvents', 'technical', 'cultural', 'workshops', 'tech', 'sports', 'food'] as const
+import EventCard from '@/components/schedule/EventCard'
+
+const SCROLL_TO_HOUR = 9
+
+const FILTERS = ['allEvents', 'saved', 'going', 'technical', 'cultural', 'workshops', 'tech', 'sports', 'food'] as const
 
 // Map schedule filter to DB categories
 const FILTER_CATEGORY_MAP: Record<string, string | null> = {
@@ -38,6 +43,16 @@ const EVENT_VARIANTS = {
         bg: 'bg-purple-50 dark:bg-purple-900/20',
         border: 'border-purple-200 dark:border-purple-700/50',
         text: 'text-purple-700 dark:text-purple-300'
+    },
+    saved: {
+        bg: 'bg-yellow-50 dark:bg-yellow-900/20',
+        border: 'border-yellow-200 dark:border-yellow-700/50',
+        text: 'text-yellow-700 dark:text-yellow-300'
+    },
+    going: {
+        bg: 'bg-green-50 dark:bg-green-900/20',
+        border: 'border-green-200 dark:border-green-700/50',
+        text: 'text-green-700 dark:text-green-300'
     },
     workshop: {
         bg: 'bg-blue-50 dark:bg-blue-900/20',
@@ -73,12 +88,14 @@ const EVENT_VARIANTS = {
 
 export default function SchedulePage() {
     const { t } = useTranslation()
-    const [searchParams, setSearchParams] = useSearchParams()
+    const [searchParams] = useSearchParams()
     const { user } = useAuthStore()
-    const [activeDay, setActiveDay] = useState<typeof DAYS[number]>('day1')
+    const { activeDay } = useScheduleStore()
+    const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-    // View mode: normal schedule, registered events, or saved events
-    const viewMode = searchParams.get('view') as 'registered' | 'saved' | null
+
+
+
 
     // Initialize filter from URL ?category= param
     const urlCategory = searchParams.get('category')
@@ -95,13 +112,16 @@ export default function SchedulePage() {
     }, [urlCategory])
 
     const { events, loading } = useEventsByDay(activeDay)
-    const { events: allEvents, loading: allEventsLoading } = useAllEvents()
-    const { bookmarks } = useBookmarks(user?.uid)
+
+    const { bookmarks, isBookmarked, toggleBookmark } = useBookmarks(user?.uid)
 
     // Registered event IDs
     const [registeredIds, setRegisteredIds] = useState<string[]>([])
     useEffect(() => {
-        if (!user?.uid || viewMode !== 'registered') return
+        if (!user?.uid) {
+            setRegisteredIds([])
+            return
+        }
         supabase
             .from('event_registrations')
             .select('event_id')
@@ -109,98 +129,145 @@ export default function SchedulePage() {
             .then(({ data }) => {
                 setRegisteredIds((data ?? []).map(r => r.event_id))
             })
-    }, [user?.uid, viewMode])
+    }, [user?.uid])
 
     // Determine which events to show
     const getFilteredEvents = () => {
-        if (viewMode === 'saved') {
+        // 1. Filter by active filter (Categories / Saved / Going)
+        let filtered = events
+
+        if (activeFilter === 'saved') {
             const savedEventIds = bookmarks.filter(b => b.type === 'event').map(b => b.event_id)
-            return allEvents.filter(e => savedEventIds.includes(e.id))
+            filtered = events.filter(e => savedEventIds.includes(e.id))
+        } else if (activeFilter === 'going') {
+            filtered = events.filter(e => registeredIds.includes(e.id))
+        } else if (activeFilter !== 'allEvents') {
+            filtered = events.filter((e) => e.category === FILTER_CATEGORY_MAP[activeFilter])
         }
-        if (viewMode === 'registered') {
-            return allEvents.filter(e => registeredIds.includes(e.id))
-        }
-        // Normal mode: filter by day + category
-        return activeFilter === 'allEvents'
-            ? events
-            : events.filter((e) => e.category === FILTER_CATEGORY_MAP[activeFilter])
+
+        return filtered
     }
 
     const filteredEvents = getFilteredEvents()
-    const isViewMode = viewMode === 'saved' || viewMode === 'registered'
-    const viewLoading = isViewMode ? allEventsLoading : loading
+    const viewLoading = loading // Unified loading state since we filter `events` (by day)
+
+    // Scroll to 8 AM when data loads or day changes
+    // Scroll to 8 AM when data loads or day/filter changes
+    useEffect(() => {
+        if (!viewLoading && scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = SCROLL_TO_HOUR * HOUR_HEIGHT
+        }
+    }, [viewLoading, activeDay, activeFilter])
+
+    const handleBookmarkToggle = (eventId: string) => {
+        if (!user) {
+            toast(t('stalls.pleaseSignIn'), { icon: '🔒' })
+            return
+        }
+        toggleBookmark(eventId)
+    }
+
+    const handleRegistrationToggle = async (eventId: string) => {
+        if (!user) {
+            toast(t('stalls.pleaseSignIn'), { icon: '🔒' })
+            return
+        }
+
+        const isRegistered = registeredIds.includes(eventId)
+
+        // Optimistic update
+        setRegisteredIds(prev =>
+            isRegistered
+                ? prev.filter(id => id !== eventId)
+                : [...prev, eventId]
+        )
+
+        if (isRegistered) {
+            const { error } = await supabase
+                .from('event_registrations')
+                .delete()
+                .eq('user_id', user.uid)
+                .eq('event_id', eventId)
+
+            if (error) {
+                toast.error(t('common.error'))
+                // Revert
+                setRegisteredIds(prev => [...prev, eventId])
+            }
+        } else {
+            const { error } = await supabase
+                .from('event_registrations')
+                .insert({
+                    event_id: eventId,
+                    user_id: user.uid,
+                    payment_status: 'completed',
+                    checked_in: false,
+                })
+
+            if (error) {
+                toast.error(t('common.error'))
+                // Revert
+                setRegisteredIds(prev => prev.filter(id => id !== eventId))
+            } else {
+                toast.success(t('event.registeredYou'))
+            }
+        }
+    }
 
     return (
         <div className="animate-fade-in flex flex-col h-[calc(100vh-64px)] overflow-hidden">
-            {isViewMode ? (
-                /* View Mode Banner */
-                <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border sticky top-0 z-30 shadow-sm">
-                    <div className="flex items-center gap-2">
-                        <Icon
-                            icon={viewMode === 'saved' ? 'solar:bookmark-bold' : 'solar:check-circle-bold'}
-                            width={18}
-                            className={viewMode === 'saved' ? 'text-primary-600' : 'text-green-500'}
-                        />
-                        <h3 className="text-sm font-bold text-card-foreground">
-                            {viewMode === 'saved' ? t('schedule.saved') : t('schedule.registered')}
-                        </h3>
-                    </div>
-                    <button
-                        onClick={() => setSearchParams({})}
-                        className="text-xs font-semibold text-primary px-3 py-1 rounded-full bg-primary/10 active:scale-95 transition-transform"
-                    >
-                        {t('common.showAll')}
-                    </button>
-                </div>
-            ) : (
-                /* Sticky Header Container */
-                <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm">
-                    {/* Day Tabs */}
-                    <div className="flex px-4">
-                        {DAYS.map((day) => (
-                            <button
-                                key={day}
-                                onClick={() => setActiveDay(day)}
-                                className={cn(
-                                    'flex-1 py-3 text-sm font-semibold transition-all duration-200 border-b-2',
-                                    activeDay === day
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
-                                )}
-                            >
-                                {t(`schedule.${day}`)}
-                            </button>
-                        ))}
-                    </div>
+            {/* Header Section - Split for sliding door effect */}
 
-                    {/* Filter Chips */}
-                    <div className="flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar">
-                        {FILTERS.map((filter) => (
-                            <button
-                                key={filter}
-                                onClick={() => setActiveFilter(filter)}
-                                className={cn(
-                                    'flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border',
-                                    activeFilter === filter
-                                        ? 'bg-primary text-primary-foreground border-primary shadow-glow'
-                                        : 'bg-card text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
-                                )}
-                            >
-                                {t(`schedule.${filter}`)}
-                            </button>
-                        ))}
+            {/* Scrollable Container for the rest */}
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto relative no-scrollbar bg-background/50">
+
+                {/* 1. Day Tabs - REMOVED (Moved to App Layout Header) */}
+
+                {/* 2. Filter Chips - Sticky (Sticks to top inside the scroll container) */}
+                <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm py-3 px-4">
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                        {FILTERS.map((filter) => {
+                            const isSpecial = filter === 'saved' || filter === 'going'
+                            const isActive = activeFilter === filter
+
+                            return (
+                                <button
+                                    key={filter}
+                                    onClick={() => setActiveFilter(filter)}
+                                    className={cn(
+                                        'flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 border flex items-center gap-1.5',
+                                        isActive
+                                            ? 'bg-primary text-primary-foreground border-primary shadow-glow'
+                                            : isSpecial
+                                                ? 'bg-card text-foreground border-border hover:border-primary/50'
+                                                : 'bg-card text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
+                                    )}
+                                >
+                                    {filter === 'saved' && <Icon icon={isActive ? "solar:bookmark-bold" : "solar:bookmark-linear"} width={14} />}
+                                    {filter === 'going' && <Icon icon={isActive ? "solar:check-circle-bold" : "solar:check-circle-linear"} width={14} />}
+                                    {t(`schedule.${filter}`)}
+                                </button>
+                            )
+                        })}
                     </div>
                 </div>
-            )}
 
-            {/* Timeline Grid */}
-            <div className="flex-1 overflow-y-auto relative no-scrollbar bg-background/50">
+                {/* Timeline Grid */}
                 {viewLoading ? (
-                    <div className="flex items-center justify-center h-full">
+                    <div className="flex items-center justify-center h-full pt-20">
                         <Icon icon="svg-spinners:3-dots-fade" width={40} className="text-muted-foreground" />
                     </div>
+                ) : (activeFilter === 'saved' || activeFilter === 'going') && !user ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in pt-20">
+                        <Icon icon="solar:lock-keyhole-minimalistic-bold-duotone" className="text-muted-foreground mx-auto mb-3" width={48} />
+                        <h3 className="text-lg font-bold text-foreground mb-1">{t('common.signInRequired')}</h3>
+                        <p className="text-sm text-muted-foreground font-medium mb-4">{t('stalls.pleaseSignIn')}</p>
+                        <a href="/login" className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-bold shadow-lg hover:bg-primary/90 transition-transform active:scale-95">
+                            {t('auth.signIn')}
+                        </a>
+                    </div>
                 ) : filteredEvents.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in h-full">
+                    <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in pt-20">
                         <Icon icon="solar:calendar-search-linear" className="text-muted-foreground mx-auto mb-3" width={48} />
                         <p className="text-sm text-muted-foreground font-medium">{t('schedule.noFilterResults')}</p>
                     </div>
@@ -220,62 +287,26 @@ export default function SchedulePage() {
                         ))}
 
                         {/* Events Container */}
-                        <div className="absolute inset-0 ml-12 mr-2 mt-2">
+                        <div className="absolute inset-0 ml-16 mr-2 mt-2 z-20">
                             {calculateEventPositions(filteredEvents).map((event) => {
                                 const variant = EVENT_VARIANTS[event.category as keyof typeof EVENT_VARIANTS] || EVENT_VARIANTS.default
-                                const regCount = event.event_registrations?.[0]?.count ?? event.current_registrations ?? 0
-                                const bookmarkCount = event.bookmarks?.[0]?.count ?? 0
 
                                 return (
-                                    <Link
-                                        to={`/events/${event.id}`}
+                                    <EventCard
                                         key={event.id}
-                                        className={cn(
-                                            "absolute rounded-lg border p-2 flex flex-col justify-between overflow-hidden hover:z-20 hover:scale-[1.02] transition-all duration-200",
-                                            "backdrop-blur-md shadow-sm hover:shadow-md",
-                                            variant.bg,
-                                            variant.border,
-                                            variant.text
-                                        )}
+                                        event={event}
                                         style={{
                                             top: event.top,
                                             height: event.height,
                                             left: `${event.left}%`,
                                             width: `${event.width}%`,
                                         }}
-                                    >
-                                        <div className="pointer-events-none">
-                                            <h4 className="text-xs font-bold leading-tight line-clamp-2">
-                                                {event.title}
-                                            </h4>
-                                            <div className="flex items-center gap-1 text-[10px] opacity-90 mt-1">
-                                                <Icon icon="solar:map-point-linear" width={10} />
-                                                <span className="truncate">{event.location}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-auto pt-1 flex items-end justify-between">
-                                            {event.height > 60 && (
-                                                <div className="text-[10px] opacity-80 font-mono">
-                                                    {format(new Date(event.start_time), 'h:mm')} - {format(new Date(event.end_time), 'h:mm a')}
-                                                </div>
-                                            )}
-
-                                            {/* Stats chips */}
-                                            {event.height > 50 && (
-                                                <div className="flex gap-1 ml-auto">
-                                                    <div className="flex items-center gap-0.5 bg-black/5 dark:bg-white/10 px-1 rounded text-[9px] font-medium">
-                                                        <Icon icon="solar:users-group-rounded-bold" width={9} />
-                                                        <span>{regCount}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-0.5 bg-black/5 dark:bg-white/10 px-1 rounded text-[9px] font-medium">
-                                                        <Icon icon="solar:bookmark-bold" width={9} />
-                                                        <span>{bookmarkCount}</span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </Link>
+                                        variant={variant}
+                                        isBookmarked={isBookmarked(event.id)}
+                                        onBookmarkToggle={handleBookmarkToggle}
+                                        isRegistered={registeredIds.includes(event.id)}
+                                        onRegistrationToggle={handleRegistrationToggle}
+                                    />
                                 )
                             })}
                         </div>

@@ -5,6 +5,12 @@ import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import FormOverlayManager from '@/components/organiser/FormOverlayManager'
 import { ModeToggle } from '@/components/mode-toggle'
+import { useScheduleStore } from '@/lib/useScheduleStore'
+import { format } from 'date-fns'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { DEFAULT_FEST_DATES } from '@/lib/useData'
+import type { FestDates } from '@/types/database'
 
 const NAV_ITEMS = [
     { key: 'home', path: '/', iconLinear: 'solar:home-smile-linear', iconBold: 'solar:home-smile-bold' },
@@ -16,6 +22,23 @@ const NAV_ITEMS = [
 export default function AppLayout() {
     const { t } = useTranslation()
     const location = useLocation()
+    const { activeDay, setActiveDay } = useScheduleStore()
+    const [festDates, setFestDates] = useState<FestDates>(DEFAULT_FEST_DATES)
+
+    useEffect(() => {
+        supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'fest_dates')
+            .single()
+            .then(({ data }) => {
+                if (data?.value) {
+                    setFestDates(data.value as FestDates)
+                }
+            })
+    }, [])
+
+    const isSchedulePage = location.pathname === '/schedule'
 
     return (
         <div className="h-dvh bg-background flex flex-col overflow-hidden text-foreground">
@@ -28,10 +51,31 @@ export default function AppLayout() {
                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-600 to-primary-400 flex items-center justify-center text-white font-display font-bold text-sm tracking-tight shadow-glow">
                         FV
                     </div>
-                    <span className="font-display font-semibold text-lg tracking-tight text-foreground">
+                    <span className="font-display font-semibold text-lg tracking-tight text-foreground hidden md:block">
                         {t('app.name')}
                     </span>
                 </div>
+
+                {isSchedulePage && (
+                    <div className="mx-auto md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 flex items-center bg-secondary/50 p-1 rounded-full border border-border/50">
+                        {(['day1', 'day2'] as const).map((day) => (
+                            <button
+                                key={day}
+                                onClick={() => setActiveDay(day)}
+                                className={cn(
+                                    "px-3 py-1 rounded-full text-xs font-bold transition-all min-w-[70px]",
+                                    activeDay === day
+                                        ? "bg-background text-primary shadow-sm"
+                                        : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                <span className="hidden md:inline">{format(new Date(festDates[day].start), 'MMM d')}</span>
+                                <span className="md:hidden">{format(new Date(festDates[day].start), 'MMM d')}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-3">
@@ -53,7 +97,10 @@ export default function AppLayout() {
             </header>
 
             {/* ===== MAIN CONTENT ===== */}
-            <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar pb-20 scroll-smooth max-w-3xl mx-auto w-full">
+            <main className={cn(
+                "flex-1 overflow-y-auto overflow-x-hidden no-scrollbar pb-20 scroll-smooth mx-auto w-full",
+                isSchedulePage ? "max-w-full" : "max-w-3xl"
+            )}>
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={location.pathname}
