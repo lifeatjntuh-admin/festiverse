@@ -13,7 +13,7 @@ export function useFeaturedEvents() {
     useEffect(() => {
         supabase
             .from('events')
-            .select('*')
+            .select('*, bookmarks(count), event_registrations(count)')
             .eq('is_featured', true)
             .eq('is_published', true)
             .order('featured_order', { ascending: true })
@@ -50,7 +50,7 @@ export function useEventsByDay(day: 'day1' | 'day2') {
 
         supabase
             .from('events')
-            .select('*')
+            .select('*, bookmarks(count), event_registrations(count)')
             .eq('is_published', true)
             .gte('start_time', start)
             .lte('start_time', end)
@@ -79,7 +79,7 @@ export function useAllEvents() {
     useEffect(() => {
         supabase
             .from('events')
-            .select('*')
+            .select('*, bookmarks(count), event_registrations(count)')
             .eq('is_published', true)
             .order('start_time', { ascending: true })
             .then(({ data, error: err }) => {

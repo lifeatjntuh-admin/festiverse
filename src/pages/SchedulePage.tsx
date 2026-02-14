@@ -33,13 +33,43 @@ const CATEGORY_TO_FILTER: Record<string, typeof FILTERS[number]> = {
     food: 'food',
 }
 
-const TAG_COLORS: Record<string, string> = {
-    cultural: 'text-purple-600 bg-purple-50 dark:bg-purple-500/10 dark:text-purple-400',
-    workshop: 'text-blue-600 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400',
-    competition: 'text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400',
-    sports: 'text-green-600 bg-green-50 dark:bg-green-500/10 dark:text-green-400',
-    food: 'text-orange-600 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-400',
-}
+const EVENT_VARIANTS = {
+    cultural: {
+        bg: 'bg-purple-50 dark:bg-purple-900/20',
+        border: 'border-purple-200 dark:border-purple-700/50',
+        text: 'text-purple-700 dark:text-purple-300'
+    },
+    workshop: {
+        bg: 'bg-blue-50 dark:bg-blue-900/20',
+        border: 'border-blue-200 dark:border-blue-700/50',
+        text: 'text-blue-700 dark:text-blue-300'
+    },
+    competition: {
+        bg: 'bg-red-50 dark:bg-red-900/20',
+        border: 'border-red-200 dark:border-red-700/50',
+        text: 'text-red-700 dark:text-red-300'
+    },
+    sports: {
+        bg: 'bg-green-50 dark:bg-green-900/20',
+        border: 'border-green-200 dark:border-green-700/50',
+        text: 'text-green-700 dark:text-green-300'
+    },
+    food: {
+        bg: 'bg-orange-50 dark:bg-orange-900/20',
+        border: 'border-orange-200 dark:border-orange-700/50',
+        text: 'text-orange-700 dark:text-orange-300'
+    },
+    tech: {
+        bg: 'bg-cyan-50 dark:bg-cyan-900/20',
+        border: 'border-cyan-200 dark:border-cyan-700/50',
+        text: 'text-cyan-700 dark:text-cyan-300'
+    },
+    default: {
+        bg: 'bg-zinc-50 dark:bg-zinc-800/50',
+        border: 'border-zinc-200 dark:border-zinc-700/50',
+        text: 'text-zinc-700 dark:text-zinc-300'
+    }
+} as const
 
 export default function SchedulePage() {
     const { t } = useTranslation()
@@ -101,10 +131,10 @@ export default function SchedulePage() {
     const viewLoading = isViewMode ? allEventsLoading : loading
 
     return (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in flex flex-col h-[calc(100vh-64px)] overflow-hidden">
             {isViewMode ? (
                 /* View Mode Banner */
-                <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border sticky top-0 z-10">
+                <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border sticky top-0 z-30 shadow-sm">
                     <div className="flex items-center gap-2">
                         <Icon
                             icon={viewMode === 'saved' ? 'solar:bookmark-bold' : 'solar:check-circle-bold'}
@@ -123,9 +153,10 @@ export default function SchedulePage() {
                     </button>
                 </div>
             ) : (
-                <>
+                /* Sticky Header Container */
+                <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm">
                     {/* Day Tabs */}
-                    <div className="flex border-b border-border px-4 sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+                    <div className="flex px-4">
                         {DAYS.map((day) => (
                             <button
                                 key={day}
@@ -149,21 +180,21 @@ export default function SchedulePage() {
                                 key={filter}
                                 onClick={() => setActiveFilter(filter)}
                                 className={cn(
-                                    'flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200',
+                                    'flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border',
                                     activeFilter === filter
-                                        ? 'bg-primary text-primary-foreground shadow-glow'
-                                        : 'bg-card text-muted-foreground border border-border hover:border-primary/50'
+                                        ? 'bg-primary text-primary-foreground border-primary shadow-glow'
+                                        : 'bg-card text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
                                 )}
                             >
                                 {t(`schedule.${filter}`)}
                             </button>
                         ))}
                     </div>
-                </>
+                </div>
             )}
 
             {/* Timeline Grid */}
-            <div className="flex-1 overflow-y-auto relative no-scrollbar" style={{ height: 'calc(100vh - 200px)' }}>
+            <div className="flex-1 overflow-y-auto relative no-scrollbar bg-background/50">
                 {viewLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <Icon icon="svg-spinners:3-dots-fade" width={40} className="text-muted-foreground" />
@@ -174,15 +205,15 @@ export default function SchedulePage() {
                         <p className="text-sm text-muted-foreground font-medium">{t('schedule.noFilterResults')}</p>
                     </div>
                 ) : (
-                    <div className="relative min-h-[1200px] w-full bg-background/50" style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT + 50 }}>
+                    <div className="relative w-full" style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT + 50 }}>
                         {/* Time Slots Background */}
                         {Array.from({ length: END_HOUR - START_HOUR + 1 }).map((_, i) => (
                             <div
                                 key={i}
-                                className="absolute w-full border-t border-border/40 text-xs text-muted-foreground/40 pl-2 pointer-events-none"
+                                className="absolute w-full border-t border-border/40 text-xs text-muted-foreground/40 pl-2 pointer-events-none flex"
                                 style={{ top: i * HOUR_HEIGHT }}
                             >
-                                <span className="-mt-3 block bg-background/50 backdrop-blur-sm w-fit px-1 rounded">
+                                <span className="-mt-3 block bg-background/50 backdrop-blur-sm w-fit px-1 rounded z-10">
                                     {format(new Date().setHours(START_HOUR + i, 0), 'h a')}
                                 </span>
                             </div>
@@ -190,42 +221,64 @@ export default function SchedulePage() {
 
                         {/* Events Container */}
                         <div className="absolute inset-0 ml-12 mr-2 mt-2">
-                            {calculateEventPositions(filteredEvents).map((event) => (
-                                <Link
-                                    to={`/events/${event.id}`}
-                                    key={event.id}
-                                    className={cn(
-                                        "absolute rounded-lg border p-2 flex flex-col justify-between overflow-hidden hover:z-20 hover:scale-[1.02] transition-all",
-                                        "backdrop-blur-md bg-opacity-70 shadow-sm",
-                                        TAG_COLORS[event.category] ? (TAG_COLORS[event.category] || '').replace('text-', 'border-').replace('bg-', 'bg-opacity-10 bg-') : 'border-primary/20 bg-primary/5'
-                                    )}
-                                    style={{
-                                        top: event.top,
-                                        height: event.height,
-                                        left: `${event.left}%`,
-                                        width: `${event.width}%`,
-                                    }}
-                                >
-                                    <div className="pointer-events-none">
-                                        <h4 className="text-xs font-bold leading-tight line-clamp-2">
-                                            {event.title}
-                                        </h4>
-                                        <div className="flex items-center gap-1 text-[10px] opacity-80 mt-1">
-                                            <Icon icon="solar:map-point-linear" width={10} />
-                                            <span className="truncate">{event.location}</span>
-                                        </div>
-                                    </div>
-                                    {event.height > 60 && (
-                                        <div className="text-[10px] opacity-70 font-mono mt-auto">
-                                            {format(new Date(event.start_time), 'h:mm')} - {format(new Date(event.end_time), 'h:mm a')}
-                                        </div>
-                                    )}
-                                </Link>
-                            ))}
-                        </div>
+                            {calculateEventPositions(filteredEvents).map((event) => {
+                                const variant = EVENT_VARIANTS[event.category as keyof typeof EVENT_VARIANTS] || EVENT_VARIANTS.default
+                                const regCount = event.event_registrations?.[0]?.count ?? event.current_registrations ?? 0
+                                const bookmarkCount = event.bookmarks?.[0]?.count ?? 0
 
-                        {/* Current Time Line (Only if today) */}
-                        {/* Logic for current time line would go here, omitting for brevity in this step */}
+                                return (
+                                    <Link
+                                        to={`/events/${event.id}`}
+                                        key={event.id}
+                                        className={cn(
+                                            "absolute rounded-lg border p-2 flex flex-col justify-between overflow-hidden hover:z-20 hover:scale-[1.02] transition-all duration-200",
+                                            "backdrop-blur-md shadow-sm hover:shadow-md",
+                                            variant.bg,
+                                            variant.border,
+                                            variant.text
+                                        )}
+                                        style={{
+                                            top: event.top,
+                                            height: event.height,
+                                            left: `${event.left}%`,
+                                            width: `${event.width}%`,
+                                        }}
+                                    >
+                                        <div className="pointer-events-none">
+                                            <h4 className="text-xs font-bold leading-tight line-clamp-2">
+                                                {event.title}
+                                            </h4>
+                                            <div className="flex items-center gap-1 text-[10px] opacity-90 mt-1">
+                                                <Icon icon="solar:map-point-linear" width={10} />
+                                                <span className="truncate">{event.location}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-auto pt-1 flex items-end justify-between">
+                                            {event.height > 60 && (
+                                                <div className="text-[10px] opacity-80 font-mono">
+                                                    {format(new Date(event.start_time), 'h:mm')} - {format(new Date(event.end_time), 'h:mm a')}
+                                                </div>
+                                            )}
+
+                                            {/* Stats chips */}
+                                            {event.height > 50 && (
+                                                <div className="flex gap-1 ml-auto">
+                                                    <div className="flex items-center gap-0.5 bg-black/5 dark:bg-white/10 px-1 rounded text-[9px] font-medium">
+                                                        <Icon icon="solar:users-group-rounded-bold" width={9} />
+                                                        <span>{regCount}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-0.5 bg-black/5 dark:bg-white/10 px-1 rounded text-[9px] font-medium">
+                                                        <Icon icon="solar:bookmark-bold" width={9} />
+                                                        <span>{bookmarkCount}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </Link>
+                                )
+                            })}
+                        </div>
                     </div>
                 )}
             </div>

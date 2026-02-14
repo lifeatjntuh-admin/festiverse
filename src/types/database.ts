@@ -86,6 +86,8 @@ export interface Event {
     is_bookmarked?: boolean
     is_registered?: boolean
     user_relation?: 'owner' | 'co_host' | 'member' | 'admin'
+    bookmarks?: { count: number }[]
+    event_registrations?: { count: number }[]
 }
 
 // ===== Stalls =====
