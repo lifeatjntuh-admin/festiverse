@@ -253,9 +253,13 @@ export default function EventDetailPage() {
                 </div>
                 <div className="bg-card rounded-xl p-3 shadow-sm border border-border">
                     <Icon icon="solar:users-group-rounded-linear" width={16} className="text-primary mb-1" />
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('event.registrations', { count: event.current_registrations ?? 0 })}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {event.is_paid
+                            ? t('event.registrationsLabel')
+                            : t('event.goingLabel')}
+                    </div>
                     <div className="text-sm font-semibold text-card-foreground">
-                        {event.current_registrations}{event.max_participants ? `/${event.max_participants}` : ''} {t('event.goingSuffix')}
+                        {event.current_registrations}{event.max_participants ? `/${event.max_participants}` : ''} {event.is_paid ? t('event.registrationsSuffix') : t('event.goingSuffix')}
                     </div>
                 </div>
             </div>
@@ -288,7 +292,9 @@ export default function EventDetailPage() {
                                 : (!event.is_paid ? t('event.areYouGoing') : t('event.didYouRegister'))}
                         </div>
                         <div className="text-[10px] text-muted-foreground">
-                            {isRegistered ? t('event.tapToUnmark') : t('event.tapToMark')}
+                            {isRegistered
+                                ? t('event.tapToUnmark')
+                                : (event.is_paid ? t('event.tapToMark') : t('event.tapToMarkGoing'))}
                         </div>
                     </div>
                     <Icon

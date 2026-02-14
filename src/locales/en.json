@@ -7,7 +7,7 @@
         "home": "Home",
         "schedule": "Schedule",
         "stalls": "Stalls",
-        "profile": "Profile"    
+        "profile": "Profile"
     },
     "home": {
         "festStartsIn": "Fest starts in",
@@ -105,12 +105,16 @@
         "didYouRegister": "Did you register?",
         "areYouGoing": "Are you going?",
         "tapToUnmark": "Tap to unmark",
-        "tapToMark": "Tap to mark yourself as going",
+        "tapToMark": "Tap to mark yourself as registered",
+        "tapToMarkGoing": "Tap to mark yourself as going",
+        "registrationsSuffix": "registered",
         "date": "Date",
         "time": "Time",
         "venue": "Venue",
         "department": "Department",
         "registrations": "{{count}} registered",
+        "registrationsLabel": "Registrations",
+        "goingLabel": "Going",
         "bookmarks": "{{count}} interested",
         "about": "About",
         "rulesTitle": "Rules & Instructions",
@@ -152,8 +156,7 @@
         "welcome": "Welcome to Festiverse",
         "subtitle": "Discover events, plan your schedule, and never miss a moment",
         "signInWithGoogle": "Sign in with Google",
-        "signingIn": "Signing in..."
-    ,
+        "signingIn": "Signing in...",
         "signInFailed": "Sign-in failed. Please try again.",
         "signedOut": "Signed out successfully",
         "accountDeleted": "Account deleted",
@@ -340,8 +343,7 @@
         "confirmManageRole": "Are you sure you want to {{action}} {{role}} for this user?",
         "confirmApproveRequest": "Approve this role request?",
         "tapToToggleRoles": "Tap to toggle roles. Changes are saved immediately."
-    }
-    ,
+    },
     "notFound": {
         "title": "Lost at the Fest?",
         "paragraph": "Looks like this page wandered off to grab some street food. Let's get you back to the action! 🎪",
