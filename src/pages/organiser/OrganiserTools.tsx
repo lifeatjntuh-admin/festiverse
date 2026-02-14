@@ -13,6 +13,7 @@ import { useFormStore } from '@/lib/useFormStore'
 import type { Event, Stall } from '@/types/database'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
+import { StallHeartsList } from '@/components/organiser/StallHeartsList'
 
 // ─── Helpers ──────────────────────────
 
@@ -98,6 +99,7 @@ export default function OrganiserTools() {
     const { stalls, loading: stallsLoading, refresh: refreshStalls, setStalls } = useMyStalls(user?.uid, profile?.roles)
 
     const [expandedEvent, setExpandedEvent] = useState<string | null>(null)
+    const [expandedStall, setExpandedStall] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState<'events' | 'stalls'>('events')
 
     const { openForm } = useFormStore()
@@ -145,6 +147,8 @@ export default function OrganiserTools() {
 
 
 
+
+
     return (
         <div className="bg-background pb-24 animate-fade-in">
             {/* Header */}
@@ -158,6 +162,9 @@ export default function OrganiserTools() {
                         <p className="text-[10px] text-white/80">Manage your events & stalls</p>
                     </div>
                 </div>
+
+                {/* Removed Global Admin Banner as per request */}
+
                 <div className="grid grid-cols-3 gap-3">
                     <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
                         <div className="text-xl font-bold">{events.length}</div>
@@ -219,9 +226,24 @@ export default function OrganiserTools() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <h4 className="text-sm font-bold text-card-foreground truncate">{event.title}</h4>
-                                                <span className={`flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${event.is_published ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400'}`}>
-                                                    {event.is_published ? 'Live' : 'Draft'}
-                                                </span>
+                                                <div className="flex items-center gap-1.5 ml-2">
+                                                    <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${event.is_published ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400'}`}>
+                                                        {event.is_published ? 'Live' : 'Draft'}
+                                                    </span>
+                                                    {['owner', 'co_host', 'member'].includes(event.user_relation || '') && (
+                                                        <span className={`flex-shrink-0 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${event.user_relation === 'owner' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' :
+                                                            event.user_relation === 'co_host' ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400' :
+                                                                'bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400'
+                                                            }`}>
+                                                            {event.user_relation?.replace('_', ' ')}
+                                                        </span>
+                                                    )}
+                                                    {event.user_relation === 'admin' && (
+                                                        <span className="flex-shrink-0 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400">
+                                                            Admin
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                                 <span className="flex items-center gap-1"><Icon icon="solar:calendar-linear" width={12} />{format(new Date(event.start_time), 'MMM d, h:mm a')}</span>
@@ -293,45 +315,78 @@ export default function OrganiserTools() {
                                 <p className="text-xs text-muted-foreground/70 mt-1">Create your first stall above</p>
                             </div>
                         ) : stalls.map(stall => (
-                            <div key={stall.id} className="bg-card rounded-xl border border-border shadow-sm p-4">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div key={stall.id} className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+                                <div className="p-4">
+                                    <div className="flex items-start gap-3">
                                         {stall.images?.[0] && (
-                                            <img src={stall.images[0]} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" alt="" />
+                                            <img src={stall.images[0]} className="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-muted" alt="" />
                                         )}
-                                        <div className="min-w-0">
-                                            <div className="flex items-center gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
                                                 <h4 className="text-sm font-bold text-card-foreground truncate">{stall.name}</h4>
-                                                <span className={`flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${stall.is_active ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'}`}>
-                                                    {stall.is_active ? 'Active' : 'Inactive'}
-                                                </span>
+                                                <div className="flex items-center gap-1.5 ml-2">
+                                                    <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${stall.is_active ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'}`}>
+                                                        {stall.is_active ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                    {['owner', 'co_host', 'member'].includes(stall.user_relation || '') && (
+                                                        <span className={`flex-shrink-0 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${stall.user_relation === 'owner' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
+                                                            stall.user_relation === 'co_host' ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400' :
+                                                                'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+                                                            }`}>
+                                                            {stall.user_relation?.replace('_', ' ')}
+                                                        </span>
+                                                    )}
+                                                    {stall.user_relation === 'admin' && (
+                                                        <span className="flex-shrink-0 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400">
+                                                            Admin
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="text-xs text-muted-foreground mt-0.5">{stall.location}</div>
-                                            <div className="flex items-center gap-2 mt-1.5">
-                                                <span className="px-1.5 py-0.5 bg-muted rounded-full text-[10px] font-medium text-muted-foreground">{stall.category}</span>
-                                                {stall.menu_items && <span className="text-[10px] text-muted-foreground">{Array.isArray(stall.menu_items) ? stall.menu_items.length : 0} items</span>}
+                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                                <span className="flex items-center gap-1"><Icon icon="solar:map-point-linear" width={12} />{stall.location}</span>
+                                            </div>
+                                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground/80">
+                                                <span className="px-1.5 py-0.5 bg-muted rounded-full text-[10px] font-medium">{stall.category}</span>
+                                                <span className="flex items-center gap-1 font-medium text-rose-600 dark:text-rose-400">
+                                                    <Icon icon="solar:heart-bold" width={12} />
+                                                    {stall.bookmarks?.[0]?.count || 0} hearts
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
+                                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border overflow-x-auto">
+                                        <button onClick={() => addForm('stall', stall)}
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-secondary rounded-lg text-xs font-semibold text-secondary-foreground hover:bg-secondary/80 transition-colors">
+                                            <Icon icon="solar:pen-linear" width={14} />Edit
+                                        </button>
+                                        <button onClick={() => handleToggleStall(stall)}
+                                            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${stall.is_active ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20' : 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20'}`}>
+                                            <Icon icon={stall.is_active ? 'solar:power-bold' : 'solar:power-linear'} width={14} />
+                                            {stall.is_active ? 'Deactivate' : 'Activate'}
+                                        </button>
+                                        <button onClick={() => openForm('stall_team', stall)}
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 rounded-lg text-xs font-semibold text-purple-700 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 transition-colors whitespace-nowrap">
+                                            <Icon icon="solar:users-group-two-rounded-linear" width={14} />
+                                            Team
+                                        </button>
+                                        <button onClick={() => setExpandedStall(expandedStall === stall.id ? null : stall.id)}
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-rose-50 rounded-lg text-xs font-semibold text-rose-700 hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-500/20 transition-colors whitespace-nowrap ml-auto">
+                                            <Icon icon="solar:heart-linear" width={14} />
+                                            {expandedStall === stall.id ? 'Hide' : 'Hearts'}
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
-                                    <button onClick={() => addForm('stall', stall)}
-                                        className="flex items-center gap-1 px-3 py-1.5 bg-secondary rounded-lg text-xs font-semibold text-secondary-foreground hover:bg-secondary/80 transition-colors">
-                                        <Icon icon="solar:pen-linear" width={14} />Edit
-                                    </button>
-                                    <button onClick={() => handleToggleStall(stall)}
-                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${stall.is_active ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20' : 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20'}`}>
-                                        <Icon icon={stall.is_active ? 'solar:power-bold' : 'solar:power-linear'} width={14} />
-                                        {stall.is_active ? 'Deactivate' : 'Activate'}
-                                    </button>
-                                </div>
+                                {expandedStall === stall.id && (
+                                    <div className="border-t border-border bg-muted/30">
+                                        <StallHeartsList stallId={stall.id} />
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </>
                 )}
             </div>
-
-
-        </div>
+        </div >
     )
 }

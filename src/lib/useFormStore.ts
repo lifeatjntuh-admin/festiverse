@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { Event, Stall } from '@/types/database'
 
-export type ActiveFormType = 'event' | 'stall' | 'team'
+export type ActiveFormType = 'event' | 'stall' | 'team' | 'stall_team'
 
 export interface OpenFormState {
     id: string

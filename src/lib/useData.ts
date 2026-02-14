@@ -256,6 +256,36 @@ export function useBookmarks(userId: string | undefined) {
     return { bookmarks, loading, isBookmarked, toggleBookmark, isStallBookmarked, toggleStallBookmark, bookmarkCount }
 }
 
+/** Fetch who bookmarked a stall */
+export function useStallBookmarks(stallId: string | undefined) {
+    const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+    const [loading, setLoading] = useState(true)
+
+    const refresh = useCallback(() => {
+        if (!stallId) { setLoading(false); return }
+        setLoading(true)
+        supabase
+            .from('bookmarks')
+            .select('*, profile:user_id(*)')
+            .eq('stall_id', stallId)
+            .eq('type', 'stall')
+            .order('created_at', { ascending: false })
+            .then(({ data, error }) => {
+                if (error) {
+                    console.warn('stall bookmarks query failed:', error.message)
+                    setBookmarks([])
+                } else {
+                    setBookmarks((data ?? []) as Bookmark[])
+                }
+                setLoading(false)
+            })
+    }, [stallId])
+
+    useEffect(() => { refresh() }, [refresh])
+
+    return { bookmarks, loading, refresh }
+}
+
 // ===== Self-Registration Hook =====
 
 /** Let user self-mark whether they registered for an event */
@@ -417,45 +447,60 @@ export function useMyEvents(userId: string | undefined, roles: UserRole[] = []) 
 
         const isSuperAdmin = rolesRef.current.includes('super_admin') || rolesRef.current.includes('app_admin')
 
-        if (isSuperAdmin) {
-            supabase
-                .from('events')
-                .select('*')
-                .order('start_time', { ascending: true })
-                .then(({ data }) => {
-                    setEvents((data ?? []) as Event[])
-                    setLoading(false)
-                })
-        } else {
-            Promise.all([
-                // Owned events
-                supabase
-                    .from('events')
-                    .select('*')
-                    .eq('organizer_id', userId),
-                // Team events
-                supabase
-                    .from('event_team_members')
-                    .select('event_id, events(*)')
-                    .eq('user_id', userId)
-            ]).then(([ownedRes, teamRes]) => {
-                const owned = (ownedRes.data ?? []) as Event[]
-                const team = (teamRes.data ?? []).map((r: any) => r.events).filter(Boolean) as Event[]
+        const fetchEvents = async () => {
+            if (isSuperAdmin) {
+                // Admin: Fetch ALL events + My Team Roles
+                const [allEventsRes, teamRes] = await Promise.all([
+                    supabase.from('events').select('*').order('start_time', { ascending: true }),
+                    supabase.from('event_team_members').select('event_id, role').eq('user_id', userId)
+                ])
 
-                // Deduplicate and sort
+                const teamMap = new Map((teamRes.data ?? []).map((t: any) => [t.event_id, t.role]))
+
+                const events = (allEventsRes.data ?? []).map((e: any) => {
+                    let relation: 'owner' | 'co_host' | 'member' | 'admin' = 'admin'
+                    if (e.organizer_id === userId) relation = 'owner'
+                    else if (teamMap.has(e.id)) relation = teamMap.get(e.id) as any
+
+                    return { ...e, user_relation: relation }
+                })
+
+                setEvents(events as Event[])
+                setLoading(false)
+            } else {
+                // Normal: Fetch Owned + Team
+                const [ownedRes, teamRes] = await Promise.all([
+                    supabase.from('events').select('*').eq('organizer_id', userId),
+                    supabase.from('event_team_members').select('event_id, role, events(*)').eq('user_id', userId)
+                ])
+
+                const owned = (ownedRes.data ?? []).map((e: any) => ({ ...e, user_relation: 'owner' })) as Event[]
+
+                const team = (teamRes.data ?? []).map((r: any) => {
+                    if (!r.events) return null
+                    return { ...r.events, user_relation: r.role }
+                }).filter(Boolean) as Event[]
+
+                // Deduplicate (Owner takes precedence)
                 const combined = [...owned, ...team].reduce((acc, current) => {
-                    const x = acc.find(item => item.id === current.id);
-                    if (!x) {
+                    const existing = acc.find(item => item.id === current.id);
+                    if (!existing) {
                         return acc.concat([current]);
                     } else {
+                        // If we already have it, prioritize 'owner'
+                        if (current.user_relation === 'owner') {
+                            return acc.map(i => i.id === current.id ? current : i)
+                        }
                         return acc;
                     }
                 }, [] as Event[]).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
 
                 setEvents(combined)
                 setLoading(false)
-            })
+            }
         }
+
+        fetchEvents()
     }, [userId])
 
     useEffect(() => { refresh() }, [refresh])
@@ -466,6 +511,7 @@ export function useMyEvents(userId: string | undefined, roles: UserRole[] = []) 
 /** Fetch stalls owned by a specific user (or all if admin) */
 export function useMyStalls(userId: string | undefined, roles: UserRole[] = []) {
     const [stalls, setStalls] = useState<Stall[]>([])
+
     const [loading, setLoading] = useState(true)
 
     const rolesRef = useRef(roles)
@@ -477,20 +523,58 @@ export function useMyStalls(userId: string | undefined, roles: UserRole[] = []) 
 
         const isSuperAdmin = rolesRef.current.includes('super_admin') || rolesRef.current.includes('app_admin')
 
-        let query = supabase
-            .from('stalls')
-            .select('*')
+        const fetchStalls = async () => {
+            if (isSuperAdmin) {
+                // Admin: Fetch ALL stalls + My Team Roles
+                const [allStallsRes, teamRes] = await Promise.all([
+                    supabase.from('stalls').select('*, bookmarks(count)').order('created_at', { ascending: false }),
+                    supabase.from('stall_team_members').select('stall_id, role').eq('user_id', userId)
+                ])
 
-        if (!isSuperAdmin) {
-            query = query.eq('owner_id', userId)
+                const teamMap = new Map((teamRes.data ?? []).map((t: any) => [t.stall_id, t.role]))
+
+                const stalls = (allStallsRes.data ?? []).map((s: any) => {
+                    let relation: 'owner' | 'co_host' | 'member' | 'admin' = 'admin'
+                    if (s.owner_id === userId) relation = 'owner'
+                    else if (teamMap.has(s.id)) relation = teamMap.get(s.id) as any
+
+                    return { ...s, user_relation: relation }
+                })
+
+                setStalls(stalls as Stall[])
+                setLoading(false)
+            } else {
+                // Normal: Fetch Owned + Team
+                const [ownedRes, teamRes] = await Promise.all([
+                    supabase.from('stalls').select('*, bookmarks(count)').eq('owner_id', userId),
+                    supabase.from('stall_team_members').select('stall_id, role, stalls(*, bookmarks(count))').eq('user_id', userId)
+                ])
+
+                const owned = (ownedRes.data ?? []).map((s: any) => ({ ...s, user_relation: 'owner' })) as Stall[]
+
+                const team = (teamRes.data ?? []).map((r: any) => {
+                    if (!r.stalls) return null
+                    return { ...r.stalls, user_relation: r.role }
+                }).filter(Boolean) as Stall[]
+
+                // Deduplicate
+                const combined = [...owned, ...team].reduce((acc, current) => {
+                    const existing = acc.find(item => item.id === current.id);
+                    if (!existing) {
+                        return acc.concat([current]);
+                    } else {
+                        if (current.user_relation === 'owner') return acc.map(i => i.id === current.id ? current : i)
+                        return acc
+                    }
+                }, [] as Stall[]).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+                setStalls(combined)
+                setLoading(false)
+            }
         }
 
-        query.order('created_at', { ascending: false })
-            .then(({ data }) => {
-                setStalls((data ?? []) as Stall[])
-                setLoading(false)
-            })
-    }, [userId])
+        fetchStalls()
+    }, [userId]) // Removed isSuperAdmin from dependency as it is derived from ref
 
     useEffect(() => { refresh() }, [refresh])
 
@@ -648,6 +732,65 @@ export function useEventTeam(eventId: string | undefined) {
         const { error } = await supabase.rpc('remove_event_team_member', {
             executor_id: executorId,
             target_event_id: eventId,
+            target_user_id: userId
+        })
+        if (!error) refresh()
+        return { error }
+    }
+
+    return { members, loading, refresh, addMember, removeMember }
+}
+
+/** Fetch team members for a stall */
+import type { StallTeamMember } from '@/types/database'
+
+export function useStallTeam(stallId: string | undefined) {
+    const [members, setMembers] = useState<StallTeamMember[]>([])
+    const [loading, setLoading] = useState(true)
+
+    const refresh = useCallback(() => {
+        if (!stallId) { setLoading(false); return }
+        setLoading(true)
+        supabase
+            .from('stall_team_members')
+            .select('*, profile:user_id(*)')
+            .eq('stall_id', stallId)
+            .then(({ data, error }) => {
+                if (error) {
+                    console.warn('stall_team_members query failed:', error.message)
+                    setMembers([])
+                } else {
+                    setMembers((data ?? []) as StallTeamMember[])
+                }
+                setLoading(false)
+            })
+    }, [stallId])
+
+    useEffect(() => { refresh() }, [refresh])
+
+    const addMember = async (userId: string, role: 'co_host' | 'member' = 'member') => {
+        const executorId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
+
+        if (!executorId || !stallId) return { error: { message: 'Not authenticated or invalid stall' } }
+
+        const { error } = await supabase.rpc('add_stall_team_member', {
+            executor_id: executorId,
+            target_stall_id: stallId,
+            target_user_id: userId,
+            target_role: role
+        })
+        if (!error) refresh()
+        return { error }
+    }
+
+    const removeMember = async (userId: string) => {
+        const executorId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
+
+        if (!executorId || !stallId) return { error: { message: 'Not authenticated or invalid stall' } }
+
+        const { error } = await supabase.rpc('remove_stall_team_member', {
+            executor_id: executorId,
+            target_stall_id: stallId,
             target_user_id: userId
         })
         if (!error) refresh()

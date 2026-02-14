@@ -85,6 +85,7 @@ export interface Event {
     organizer?: Profile
     is_bookmarked?: boolean
     is_registered?: boolean
+    user_relation?: 'owner' | 'co_host' | 'member' | 'admin'
 }
 
 // ===== Stalls =====
@@ -121,12 +122,24 @@ export interface Stall {
     updated_at: string
     // Joined
     owner?: Profile
+    user_relation?: 'owner' | 'co_host' | 'member' | 'admin'
+    bookmarks?: { count: number }[]
 }
 
 // ===== Team Members =====
 export interface EventTeamMember {
     id: string
     event_id: string
+    user_id: string
+    role: 'co_host' | 'member'
+    created_at: string
+    // Joined
+    profile?: Profile
+}
+
+export interface StallTeamMember {
+    id: string
+    stall_id: string
     user_id: string
     role: 'co_host' | 'member'
     created_at: string
@@ -167,6 +180,8 @@ export interface Bookmark {
     stall_id: string | null
     type: BookmarkType
     created_at: string
+    // Joined
+    profile?: Profile
 }
 
 // ===== Notifications =====
