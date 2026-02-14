@@ -39,18 +39,18 @@ export default function LoginPage() {
                 </div>
 
                 {/* Sign In Card */}
-                <div className="bg-white rounded-2xl p-6 shadow-2xl">
-                    <h2 className="text-lg font-bold text-gray-900 text-center mb-1">
+                <div className="bg-card rounded-2xl p-6 shadow-2xl border border-white/10">
+                    <h2 className="text-lg font-bold text-card-foreground text-center mb-1">
                         {t('login.welcome')}
                     </h2>
-                    <p className="text-sm text-gray-500 text-center mb-6">
+                    <p className="text-sm text-muted-foreground text-center mb-6">
                         {t('login.signInPrompt')}
                     </p>
 
                     <button
                         onClick={handleGoogleSignIn}
                         disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-center gap-3 bg-secondary hover:bg-secondary/80 border border-border rounded-xl px-4 py-3 text-sm font-semibold text-secondary-foreground transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {isLoading ? (
                             <div className="w-5 h-5 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin" />

@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import FormOverlayManager from '@/components/organiser/FormOverlayManager'
+import { ModeToggle } from '@/components/mode-toggle'
 
 const NAV_ITEMS = [
     { key: 'home', path: '/', iconLinear: 'solar:home-smile-linear', iconBold: 'solar:home-smile-bold' },
@@ -17,31 +18,32 @@ export default function AppLayout() {
     const location = useLocation()
 
     return (
-        <div className="h-dvh bg-gray-50 flex flex-col overflow-hidden">
+        <div className="h-dvh bg-background flex flex-col overflow-hidden text-foreground">
             <FormOverlayManager />
 
             {/* ===== TOP BAR (Glassmorphism) ===== */}
-            <header className="sticky top-0 z-40 h-14 glass border-b border-gray-100 flex items-center justify-between px-4 transition-all duration-300">
+            <header className="sticky top-0 z-40 h-14 glass border-b border-border/40 flex items-center justify-between px-4 transition-all duration-300 dark:bg-background/80 dark:backdrop-blur-md">
                 {/* Left: Logo */}
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-600 to-primary-400 flex items-center justify-center text-white font-display font-bold text-sm tracking-tight shadow-glow">
                         FV
                     </div>
-                    <span className="font-display font-semibold text-lg tracking-tight text-gray-900">
+                    <span className="font-display font-semibold text-lg tracking-tight text-foreground">
                         {t('app.name')}
                     </span>
                 </div>
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-3">
+                    <ModeToggle />
                     <button
-                        className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 active:scale-95 transition-all"
+                        className="w-9 h-9 flex items-center justify-center rounded-full bg-secondary/50 text-muted-foreground hover:bg-secondary active:scale-95 transition-all"
                         aria-label="Search"
                     >
                         <Icon icon="solar:magnifer-linear" width={20} />
                     </button>
                     <button
-                        className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 active:scale-95 transition-all relative"
+                        className="w-9 h-9 flex items-center justify-center rounded-full bg-secondary/50 text-muted-foreground hover:bg-secondary active:scale-95 transition-all relative"
                         aria-label="Notifications"
                     >
                         <Icon icon="solar:bell-bing-linear" width={20} />
@@ -66,7 +68,7 @@ export default function AppLayout() {
             </main>
 
             {/* ===== BOTTOM NAVIGATION ===== */}
-            <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-100 flex justify-around items-center px-2 z-50 pb-safe max-w-3xl mx-auto">
+            <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-md border-t border-border/40 flex justify-around items-center px-2 z-50 pb-safe max-w-3xl mx-auto">
                 {NAV_ITEMS.map(({ key, path, iconLinear, iconBold }) => (
                     <NavLink
                         key={key}
@@ -75,8 +77,8 @@ export default function AppLayout() {
                             cn(
                                 'group flex flex-col items-center gap-1 p-2 w-16 transition-all',
                                 isActive
-                                    ? 'text-primary-600'
-                                    : 'text-gray-400 hover:text-gray-600'
+                                    ? 'text-primary'
+                                    : 'text-gray-400 dark:text-gray-500 hover:text-foreground'
                             )
                         }
                     >

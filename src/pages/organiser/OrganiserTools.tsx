@@ -41,30 +41,30 @@ function RegistrationsList({ eventId }: { eventId: string }) {
     )
     if (registrations.length === 0) return (
         <div className="py-6 text-center">
-            <Icon icon="solar:users-group-rounded-linear" width={32} className="text-gray-300 mx-auto mb-2" />
-            <p className="text-xs text-gray-400">No registrations yet</p>
+            <Icon icon="solar:users-group-rounded-linear" width={32} className="text-muted-foreground mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">No registrations yet</p>
         </div>
     )
     const checkedIn = registrations.filter(r => r.checked_in).length
     return (
         <div>
-            <div className="px-4 py-2 flex items-center justify-between bg-gray-50 border-b border-gray-100">
-                <span className="text-xs text-gray-500 font-medium">{registrations.length} registered • {checkedIn} checked in</span>
+            <div className="px-4 py-2 flex items-center justify-between bg-muted/50 border-b border-border">
+                <span className="text-xs text-muted-foreground font-medium">{registrations.length} registered • {checkedIn} checked in</span>
             </div>
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-border">
                 {registrations.map(reg => (
                     <div key={reg.id} className="px-4 py-2.5 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                        <div className="w-8 h-8 rounded-full bg-muted flex-shrink-0 overflow-hidden">
                             {reg.profile?.avatar_url
                                 ? <img src={reg.profile.avatar_url} className="w-full h-full object-cover" alt="" />
-                                : <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs font-bold">{reg.profile?.name?.[0]?.toUpperCase() || '?'}</div>}
+                                : <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs font-bold">{reg.profile?.name?.[0]?.toUpperCase() || '?'}</div>}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-gray-800 truncate">{reg.profile?.name || 'Unknown'}</div>
-                            <div className="text-[10px] text-gray-400 truncate">{reg.profile?.email} {reg.profile?.college_id && `• ${reg.profile.college_id}`}</div>
+                            <div className="text-sm font-medium text-foreground truncate">{reg.profile?.name || 'Unknown'}</div>
+                            <div className="text-[10px] text-muted-foreground truncate">{reg.profile?.email} {reg.profile?.college_id && `• ${reg.profile.college_id}`}</div>
                         </div>
                         <button onClick={() => toggleCheckIn(reg.id, reg.checked_in)}
-                            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 ${reg.checked_in ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 ${reg.checked_in ? 'bg-green-100 text-green-700 border border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20' : 'bg-muted text-muted-foreground border border-border'}`}>
                             <Icon icon={reg.checked_in ? 'solar:check-circle-bold' : 'solar:login-3-linear'} width={14} />
                             {reg.checked_in ? 'In' : 'Check In'}
                         </button>
@@ -112,11 +112,11 @@ export default function OrganiserTools() {
     // Guard
     if (!profile?.roles?.some(r => ['event_manager', 'stall_manager', 'team_member', 'app_admin', 'super_admin'].includes(r))) {
         return (
-            <div className="bg-gray-50 flex items-center justify-center p-4" style={{ minHeight: 'calc(100dvh - 120px)' }}>
+            <div className="bg-background flex items-center justify-center p-4" style={{ minHeight: 'calc(100dvh - 120px)' }}>
                 <div className="text-center">
-                    <Icon icon="solar:lock-keyhole-linear" width={48} className="text-gray-300 mx-auto mb-3" />
-                    <h2 className="font-bold text-gray-900 mb-1">Unauthorized</h2>
-                    <p className="text-sm text-gray-500 mb-4">You need an organiser role to access this page.</p>
+                    <Icon icon="solar:lock-keyhole-linear" width={48} className="text-muted-foreground mx-auto mb-3" />
+                    <h2 className="font-bold text-foreground mb-1">Unauthorized</h2>
+                    <p className="text-sm text-muted-foreground mb-4">You need an organiser role to access this page.</p>
                     <Link to="/profile" className="text-primary-600 font-semibold text-sm">← Back to Profile</Link>
                 </div>
             </div>
@@ -146,7 +146,7 @@ export default function OrganiserTools() {
 
 
     return (
-        <div className="bg-gray-50 pb-24 animate-fade-in">
+        <div className="bg-background pb-24 animate-fade-in">
             {/* Header */}
             <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-5 shadow-lg">
                 <div className="flex items-center gap-3 mb-4">
@@ -175,13 +175,13 @@ export default function OrganiserTools() {
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-200 bg-white sticky top-0 z-10">
+            <div className="flex border-b border-border bg-card sticky top-0 z-10">
                 <button onClick={() => setActiveTab('events')}
-                    className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === 'events' ? 'text-orange-600 border-orange-500' : 'text-gray-400 border-transparent'}`}>
+                    className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === 'events' ? 'text-orange-600 border-orange-500' : 'text-muted-foreground border-transparent'}`}>
                     <Icon icon="solar:calendar-bold" width={16} className="inline mr-1.5 -mt-0.5" />My Events
                 </button>
                 <button onClick={() => setActiveTab('stalls')}
-                    className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === 'stalls' ? 'text-orange-600 border-orange-500' : 'text-gray-400 border-transparent'}`}>
+                    className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === 'stalls' ? 'text-orange-600 border-orange-500' : 'text-muted-foreground border-transparent'}`}>
                     <Icon icon="solar:shop-2-bold" width={16} className="inline mr-1.5 -mt-0.5" />My Stalls
                 </button>
             </div>
@@ -192,7 +192,7 @@ export default function OrganiserTools() {
                     <>
                         {isEventManager && (
                             <button onClick={() => addForm('event', null)}
-                                className="w-full p-3 bg-white rounded-xl border-2 border-dashed border-orange-200 text-orange-600 flex items-center justify-center gap-2 font-semibold text-sm hover:bg-orange-50 transition-colors active:scale-[0.99]">
+                                className="w-full p-3 bg-card rounded-xl border-2 border-dashed border-primary/30 text-primary flex items-center justify-center gap-2 font-semibold text-sm hover:bg-primary/5 transition-colors active:scale-[0.99]">
                                 <Icon icon="solar:add-circle-linear" width={20} />
                                 Create New Event
                             </button>
@@ -200,66 +200,66 @@ export default function OrganiserTools() {
                         {eventsLoading ? (
                             <div className="space-y-3">
                                 {[1, 2, 3].map(i => (
-                                    <div key={i} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-                                        <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4 mb-2" />
-                                        <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2" />
+                                    <div key={i} className="bg-card rounded-xl p-4 border border-border shadow-sm">
+                                        <div className="h-4 bg-muted rounded animate-pulse w-3/4 mb-2" />
+                                        <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
                                     </div>
                                 ))}
                             </div>
                         ) : events.length === 0 ? (
                             <div className="text-center py-12">
-                                <Icon icon="solar:calendar-search-linear" width={48} className="text-gray-300 mx-auto mb-3" />
-                                <p className="text-sm text-gray-500 font-medium">No events yet</p>
-                                <p className="text-xs text-gray-400 mt-1">Create your first event above</p>
+                                <Icon icon="solar:calendar-search-linear" width={48} className="text-muted-foreground mx-auto mb-3" />
+                                <p className="text-sm text-muted-foreground font-medium">No events yet</p>
+                                <p className="text-xs text-muted-foreground/70 mt-1">Create your first event above</p>
                             </div>
                         ) : events.map(event => (
-                            <div key={event.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div key={event.id} className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                                 <div className="p-4">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <h4 className="text-sm font-bold text-gray-900 truncate">{event.title}</h4>
-                                                <span className={`flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${event.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                <h4 className="text-sm font-bold text-card-foreground truncate">{event.title}</h4>
+                                                <span className={`flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${event.is_published ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400'}`}>
                                                     {event.is_published ? 'Live' : 'Draft'}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-3 text-xs text-gray-400">
+                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                                 <span className="flex items-center gap-1"><Icon icon="solar:calendar-linear" width={12} />{format(new Date(event.start_time), 'MMM d, h:mm a')}</span>
                                                 <span className="flex items-center gap-1"><Icon icon="solar:map-point-linear" width={12} />{event.location}</span>
                                             </div>
-                                            <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground/80">
                                                 <span className="flex items-center gap-1">
                                                     <Icon icon="solar:users-group-rounded-linear" width={12} />
                                                     {event.current_registrations}{event.max_participants ? `/${event.max_participants}` : ''} registered
                                                 </span>
-                                                <span className="px-1.5 py-0.5 bg-gray-100 rounded-full text-[10px] font-medium">{event.category}</span>
+                                                <span className="px-1.5 py-0.5 bg-muted rounded-full text-[10px] font-medium">{event.category}</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50 overflow-x-auto">
+                                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border overflow-x-auto">
                                         <button onClick={() => addForm('event', event)}
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-gray-50 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap">
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-secondary rounded-lg text-xs font-semibold text-secondary-foreground hover:bg-secondary/80 transition-colors whitespace-nowrap">
                                             <Icon icon="solar:pen-linear" width={14} />Edit
                                         </button>
                                         <button onClick={() => handleTogglePublish(event)}
-                                            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${event.is_published ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}>
+                                            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${event.is_published ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-400 dark:hover:bg-yellow-500/20' : 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20'}`}>
                                             <Icon icon={event.is_published ? 'solar:eye-closed-linear' : 'solar:eye-linear'} width={14} />
                                             {event.is_published ? 'Unpublish' : 'Publish'}
                                         </button>
                                         <button onClick={() => openForm('team', event)}
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 rounded-lg text-xs font-semibold text-purple-700 hover:bg-purple-100 transition-colors whitespace-nowrap">
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 rounded-lg text-xs font-semibold text-purple-700 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 transition-colors whitespace-nowrap">
                                             <Icon icon="solar:users-group-two-rounded-linear" width={14} />
                                             Team
                                         </button>
                                         <button onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 rounded-lg text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors ml-auto whitespace-nowrap">
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 rounded-lg text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 transition-colors ml-auto whitespace-nowrap">
                                             <Icon icon="solar:users-group-rounded-linear" width={14} />
                                             {expandedEvent === event.id ? 'Hide' : 'Registrations'}
                                         </button>
                                     </div>
                                 </div>
                                 {expandedEvent === event.id && (
-                                    <div className="border-t border-gray-100 bg-gray-50/50">
+                                    <div className="border-t border-border bg-muted/30">
                                         <RegistrationsList eventId={event.id} />
                                     </div>
                                 )}
@@ -272,7 +272,7 @@ export default function OrganiserTools() {
                     <>
                         {isStallManager && (
                             <button onClick={() => addForm('stall', null)}
-                                className="w-full p-3 bg-white rounded-xl border-2 border-dashed border-orange-200 text-orange-600 flex items-center justify-center gap-2 font-semibold text-sm hover:bg-orange-50 transition-colors active:scale-[0.99]">
+                                className="w-full p-3 bg-card rounded-xl border-2 border-dashed border-primary/30 text-primary flex items-center justify-center gap-2 font-semibold text-sm hover:bg-primary/5 transition-colors active:scale-[0.99]">
                                 <Icon icon="solar:add-circle-linear" width={20} />
                                 Create New Stall
                             </button>
@@ -280,20 +280,20 @@ export default function OrganiserTools() {
                         {stallsLoading ? (
                             <div className="space-y-3">
                                 {[1, 2].map(i => (
-                                    <div key={i} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-                                        <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4 mb-2" />
-                                        <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2" />
+                                    <div key={i} className="bg-card rounded-xl p-4 border border-border shadow-sm">
+                                        <div className="h-4 bg-muted rounded animate-pulse w-3/4 mb-2" />
+                                        <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
                                     </div>
                                 ))}
                             </div>
                         ) : stalls.length === 0 ? (
                             <div className="text-center py-12">
-                                <Icon icon="solar:shop-2-linear" width={48} className="text-gray-300 mx-auto mb-3" />
-                                <p className="text-sm text-gray-500 font-medium">No stalls yet</p>
-                                <p className="text-xs text-gray-400 mt-1">Create your first stall above</p>
+                                <Icon icon="solar:shop-2-linear" width={48} className="text-muted-foreground mx-auto mb-3" />
+                                <p className="text-sm text-muted-foreground font-medium">No stalls yet</p>
+                                <p className="text-xs text-muted-foreground/70 mt-1">Create your first stall above</p>
                             </div>
                         ) : stalls.map(stall => (
-                            <div key={stall.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                            <div key={stall.id} className="bg-card rounded-xl border border-border shadow-sm p-4">
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex items-start gap-3 flex-1 min-w-0">
                                         {stall.images?.[0] && (
@@ -301,26 +301,26 @@ export default function OrganiserTools() {
                                         )}
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-bold text-gray-900 truncate">{stall.name}</h4>
-                                                <span className={`flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${stall.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                <h4 className="text-sm font-bold text-card-foreground truncate">{stall.name}</h4>
+                                                <span className={`flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${stall.is_active ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'}`}>
                                                     {stall.is_active ? 'Active' : 'Inactive'}
                                                 </span>
                                             </div>
-                                            <div className="text-xs text-gray-400 mt-0.5">{stall.location}</div>
+                                            <div className="text-xs text-muted-foreground mt-0.5">{stall.location}</div>
                                             <div className="flex items-center gap-2 mt-1.5">
-                                                <span className="px-1.5 py-0.5 bg-gray-100 rounded-full text-[10px] font-medium text-gray-600">{stall.category}</span>
-                                                {stall.menu_items && <span className="text-[10px] text-gray-400">{Array.isArray(stall.menu_items) ? stall.menu_items.length : 0} items</span>}
+                                                <span className="px-1.5 py-0.5 bg-muted rounded-full text-[10px] font-medium text-muted-foreground">{stall.category}</span>
+                                                {stall.menu_items && <span className="text-[10px] text-muted-foreground">{Array.isArray(stall.menu_items) ? stall.menu_items.length : 0} items</span>}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50">
+                                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
                                     <button onClick={() => addForm('stall', stall)}
-                                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-50 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors">
+                                        className="flex items-center gap-1 px-3 py-1.5 bg-secondary rounded-lg text-xs font-semibold text-secondary-foreground hover:bg-secondary/80 transition-colors">
                                         <Icon icon="solar:pen-linear" width={14} />Edit
                                     </button>
                                     <button onClick={() => handleToggleStall(stall)}
-                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${stall.is_active ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}>
+                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${stall.is_active ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20' : 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20'}`}>
                                         <Icon icon={stall.is_active ? 'solar:power-bold' : 'solar:power-linear'} width={14} />
                                         {stall.is_active ? 'Deactivate' : 'Activate'}
                                     </button>

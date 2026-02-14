@@ -102,15 +102,15 @@ export default function AdminDashboard() {
     const availableRoles: UserRole[] = ['team_member', 'stall_manager', 'event_manager', 'app_admin', 'super_admin']
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20 animate-fade-in">
+        <div className="min-h-screen bg-gray-50 dark:bg-background pb-20 animate-fade-in">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-10 flex items-center gap-3 shadow-sm">
-                <Link to="/profile" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                    <Icon icon="solar:arrow-left-linear" width={24} />
+            <div className="bg-white dark:bg-card border-b border-gray-200 dark:border-border px-4 py-4 sticky top-0 z-10 flex items-center gap-3 shadow-sm">
+                <Link to="/profile" className="p-2 hover:bg-gray-100 dark:hover:bg-muted/50 rounded-full transition-colors">
+                    <Icon icon="solar:arrow-left-linear" width={24} className="text-gray-900 dark:text-foreground" />
                 </Link>
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900">Admin Dashboard</h1>
-                    <p className="text-xs text-gray-500">Manage users and roles</p>
+                    <h1 className="text-lg font-bold text-gray-900 dark:text-foreground">Admin Dashboard</h1>
+                    <p className="text-xs text-gray-500 dark:text-muted-foreground">Manage users and roles</p>
                 </div>
             </div>
 
@@ -119,23 +119,23 @@ export default function AdminDashboard() {
 
                 {/* Stats Card */}
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                        <div className="text-2xl font-bold text-primary-600">{users.length}</div>
-                        <div className="text-xs text-gray-400 font-medium uppercase">Total Users</div>
+                    <div className="bg-white dark:bg-card p-4 rounded-xl border border-gray-100 dark:border-border shadow-sm">
+                        <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">{users.length}</div>
+                        <div className="text-xs text-gray-400 dark:text-muted-foreground font-medium uppercase">Total Users</div>
                     </div>
-                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                        <div className="text-2xl font-bold text-purple-600">
+                    <div className="bg-white dark:bg-card p-4 rounded-xl border border-gray-100 dark:border-border shadow-sm">
+                        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                             {users.filter(u => (u.roles || []).some(r => ['super_admin', 'app_admin'].includes(r))).length}
                         </div>
-                        <div className="text-xs text-gray-400 font-medium uppercase">Admins</div>
+                        <div className="text-xs text-gray-400 dark:text-muted-foreground font-medium uppercase">Admins</div>
                     </div>
                 </div>
 
                 {/* Users List */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                        <h3 className="font-semibold text-gray-700">Recent Users</h3>
-                        <button onClick={fetchUsers} className="text-primary-600 hover:bg-primary-50 p-1.5 rounded-lg transition-colors">
+                <div className="bg-white dark:bg-card rounded-xl shadow-sm border border-gray-200 dark:border-border overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-100 dark:border-border bg-gray-50/50 dark:bg-muted/20 flex justify-between items-center">
+                        <h3 className="font-semibold text-gray-700 dark:text-card-foreground">Recent Users</h3>
+                        <button onClick={fetchUsers} className="text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 p-1.5 rounded-lg transition-colors">
                             <Icon icon="solar:refresh-linear" width={20} />
                         </button>
                     </div>
@@ -144,20 +144,20 @@ export default function AdminDashboard() {
                         {users.map((user) => {
                             const userRoles = user.roles || []
                             return (
-                                <div key={user.id} className="p-4 flex flex-col sm:flex-row sm:items-start gap-4 hover:bg-gray-50 transition-colors">
+                                <div key={user.id} className="p-4 flex flex-col sm:flex-row sm:items-start gap-4 hover:bg-gray-50 dark:hover:bg-muted/10 transition-colors">
                                     {/* User Info */}
                                     <div className="flex items-start gap-3 flex-1">
-                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                                        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-muted flex-shrink-0 overflow-hidden">
                                             {user.avatar_url ? (
                                                 <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold">
+                                                <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-muted-foreground font-bold">
                                                     {user.name?.[0]?.toUpperCase() || '?'}
                                                 </div>
                                             )}
                                         </div>
                                         <div>
-                                            <div className="font-medium text-gray-900 flex items-center gap-2 mb-1">
+                                            <div className="font-medium text-gray-900 dark:text-card-foreground flex items-center gap-2 mb-1">
                                                 {user.name}
                                             </div>
 
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
                                                 {user.role_request && (
                                                     <button
                                                         onClick={() => handleApproveRequest(user.id)}
-                                                        className="flex items-center gap-1 text-[10px] bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-0.5 rounded-full border border-yellow-200 transition-colors"
+                                                        className="flex items-center gap-1 text-[10px] bg-yellow-100 hover:bg-yellow-200 text-yellow-700 border border-yellow-200 dark:bg-yellow-500/10 dark:hover:bg-yellow-500/20 dark:text-yellow-400 dark:border-yellow-500/20 px-2 py-0.5 rounded-full transition-colors"
                                                     >
                                                         <Icon icon="solar:check-circle-bold" />
                                                         Approve: {user.role_request}
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
                                                 )}
                                             </div>
 
-                                            <div className="text-xs text-gray-500 break-all">{user.email}</div>
+                                            <div className="text-xs text-gray-500 dark:text-muted-foreground break-all">{user.email}</div>
                                         </div>
                                     </div>
 
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
                                                         if (e.target.value) handleManageRole(user.id, e.target.value as UserRole, 'add')
                                                         e.target.value = '' // Reset the select after selection
                                                     }}
-                                                    className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-700 focus:ring-2 focus:ring-primary-500 outline-none w-32"
+                                                    className="text-xs border border-gray-200 dark:border-border rounded-lg px-2 py-1.5 bg-white dark:bg-background text-gray-700 dark:text-foreground focus:ring-2 focus:ring-primary-500 outline-none w-32"
                                                 >
                                                     <option value="">+ Add Role</option>
                                                     {availableRoles.filter(r => !userRoles.includes(r)).map(r => {

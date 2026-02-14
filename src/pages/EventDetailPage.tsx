@@ -20,7 +20,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 function TeamList({ event }: { event: Event }) {
     const { members, loading } = useEventTeam(event.id)
 
-    if (loading) return <div className="animate-pulse h-24 bg-gray-50 rounded-xl mb-6 mx-4" />
+    if (loading) return <div className="animate-pulse h-24 bg-muted rounded-xl mb-6 mx-4" />
 
     // Normalizing team members for display
     const teamMembers = members
@@ -39,18 +39,18 @@ function TeamList({ event }: { event: Event }) {
 
     return (
         <div className="px-4 mt-6">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Meet the Team</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Meet the Team</h3>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
                 {team.map(member => (
                     <div key={member.id} className="flex flex-col items-center flex-shrink-0 w-20">
-                        <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden mb-2 border-2 border-white shadow-sm flex items-center justify-center text-xl font-bold text-gray-400">
+                        <div className="w-14 h-14 rounded-full bg-muted overflow-hidden mb-2 border-2 border-background shadow-sm flex items-center justify-center text-xl font-bold text-muted-foreground">
                             {member.avatar_url
                                 ? <img src={member.avatar_url} className="w-full h-full object-cover" alt={member.name} />
                                 : member.name?.[0]
                             }
                         </div>
-                        <div className="text-xs font-medium text-gray-900 text-center truncate w-full">{member.name?.split(' ')[0]}</div>
-                        <div className="text-[10px] text-gray-500 text-center truncate w-full opacity-70">
+                        <div className="text-xs font-medium text-foreground text-center truncate w-full">{member.name?.split(' ')[0]}</div>
+                        <div className="text-[10px] text-muted-foreground text-center truncate w-full opacity-70">
                             {member.role_label}
                         </div>
                     </div>
@@ -123,12 +123,12 @@ export default function EventDetailPage() {
     if (loading) {
         return (
             <div className="animate-fade-in">
-                <div className="w-full h-56 bg-gray-100 animate-pulse" />
+                <div className="w-full h-56 bg-muted animate-pulse" />
                 <div className="px-4 mt-6 space-y-4">
-                    <div className="h-6 bg-gray-100 rounded-lg animate-pulse w-3/4" />
+                    <div className="h-6 bg-muted rounded-lg animate-pulse w-3/4" />
                     <div className="grid grid-cols-2 gap-3">
                         {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" />
+                            <div key={i} className="h-20 bg-muted rounded-xl animate-pulse" />
                         ))}
                     </div>
                 </div>
@@ -138,10 +138,10 @@ export default function EventDetailPage() {
 
     if (!event) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
-                <Icon icon="solar:calendar-search-linear" width={48} className="text-gray-300 mb-3" />
-                <h2 className="text-lg font-bold text-gray-700 mb-1">Event not found</h2>
-                <p className="text-sm text-gray-400 mb-4">This event may have been removed or doesn't exist.</p>
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+                <Icon icon="solar:calendar-search-linear" width={48} className="text-gray-400 mb-3" />
+                <h1 className="text-xl font-bold text-foreground mb-2">Event Not Found</h1>
+                <p className="text-sm text-gray-500 mb-4">This event may have been removed or doesn't exist.</p>
                 <Link to="/" className="text-sm font-semibold text-primary-600 hover:text-primary-700">
                     ← Back to Home
                 </Link>
@@ -214,46 +214,46 @@ export default function EventDetailPage() {
                 <button
                     onClick={handleBookmark}
                     disabled={bookmarking}
-                    className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-soft border border-gray-100 press-effect disabled:opacity-60"
+                    className="w-12 h-12 flex items-center justify-center bg-card rounded-xl shadow-soft border border-border press-effect disabled:opacity-60"
                 >
                     <Icon
                         icon={isBookmarked(event.id) ? 'solar:bookmark-bold' : 'solar:bookmark-linear'}
                         width={20}
-                        className={isBookmarked(event.id) ? 'text-primary-600' : 'text-gray-500'}
+                        className={isBookmarked(event.id) ? 'text-primary' : 'text-muted-foreground'}
                     />
                 </button>
                 <button
                     onClick={handleShare}
-                    className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-soft border border-gray-100 press-effect"
+                    className="w-12 h-12 flex items-center justify-center bg-card rounded-xl shadow-soft border border-border press-effect"
                 >
-                    <Icon icon="solar:share-linear" width={20} className="text-gray-500" />
+                    <Icon icon="solar:share-linear" width={20} className="text-gray-500 dark:text-gray-400" />
                 </button>
             </div>
 
             {/* Info Grid */}
             <div className="grid grid-cols-2 gap-3 px-4 mt-6">
-                <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-                    <Icon icon="solar:calendar-linear" width={16} className="text-primary-500 mb-1" />
-                    <div className="text-xs text-gray-400">{t('event.date')}</div>
-                    <div className="text-sm font-semibold text-gray-800">{format(startDate, 'MMM d, yyyy')}</div>
+                <div className="bg-card rounded-xl p-3 shadow-sm border border-border">
+                    <Icon icon="solar:calendar-linear" width={16} className="text-primary mb-1" />
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('event.date')}</div>
+                    <div className="text-sm font-semibold text-card-foreground">{format(startDate, 'MMM d, yyyy')}</div>
                 </div>
-                <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-                    <Icon icon="solar:clock-circle-linear" width={16} className="text-primary-500 mb-1" />
-                    <div className="text-xs text-gray-400">{t('event.time')}</div>
-                    <div className="text-sm font-semibold text-gray-800">
+                <div className="bg-card rounded-xl p-3 shadow-sm border border-border">
+                    <Icon icon="solar:clock-circle-linear" width={16} className="text-primary mb-1" />
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('event.time')}</div>
+                    <div className="text-sm font-semibold text-card-foreground">
                         {format(startDate, 'h:mm a')}
                         {endDate && ` – ${format(endDate, 'h:mm a')}`}
                     </div>
                 </div>
-                <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-                    <Icon icon="solar:map-point-linear" width={16} className="text-primary-500 mb-1" />
-                    <div className="text-xs text-gray-400">{t('event.venue')}</div>
-                    <div className="text-sm font-semibold text-gray-800">{event.location}</div>
+                <div className="bg-card rounded-xl p-3 shadow-sm border border-border">
+                    <Icon icon="solar:map-point-linear" width={16} className="text-primary mb-1" />
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('event.venue')}</div>
+                    <div className="text-sm font-semibold text-card-foreground">{event.location}</div>
                 </div>
-                <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-                    <Icon icon="solar:users-group-rounded-linear" width={16} className="text-primary-500 mb-1" />
-                    <div className="text-xs text-gray-400">{t('event.registrations', { count: event.current_registrations })}</div>
-                    <div className="text-sm font-semibold text-gray-800">
+                <div className="bg-card rounded-xl p-3 shadow-sm border border-border">
+                    <Icon icon="solar:users-group-rounded-linear" width={16} className="text-primary mb-1" />
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('event.registrations', { count: '' })}</div>
+                    <div className="text-sm font-semibold text-card-foreground">
                         {event.current_registrations}{event.max_participants ? `/${event.max_participants}` : ''} going
                     </div>
                 </div>
@@ -272,26 +272,26 @@ export default function EventDetailPage() {
                     }}
                     disabled={regToggling}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all press-effect ${isRegistered
-                        ? 'bg-green-50 border-green-200'
-                        : 'bg-white border-gray-100 shadow-sm'
+                        ? 'bg-green-500/10 border-green-500/20'
+                        : 'bg-card border-border shadow-sm'
                         } disabled:opacity-60`}
                 >
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isRegistered ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400'
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isRegistered ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
                         }`}>
                         <Icon icon={isRegistered ? 'solar:check-circle-bold' : 'solar:question-circle-linear'} width={20} />
                     </div>
                     <div className="text-left">
-                        <div className={`text-sm font-semibold ${isRegistered ? 'text-green-700' : 'text-gray-700'}`}>
+                        <div className={`text-sm font-semibold ${isRegistered ? 'text-green-600' : 'text-card-foreground'}`}>
                             {isRegistered ? 'You\'re registered!' : 'Did you register?'}
                         </div>
-                        <div className="text-[10px] text-gray-400">
+                        <div className="text-[10px] text-muted-foreground">
                             {isRegistered ? 'Tap to unmark' : 'Tap to mark yourself as registered'}
                         </div>
                     </div>
                     <Icon
                         icon={isRegistered ? 'solar:check-circle-bold' : 'solar:add-circle-linear'}
                         width={20}
-                        className={`ml-auto flex-shrink-0 ${isRegistered ? 'text-green-500' : 'text-gray-300'}`}
+                        className={`ml-auto flex-shrink-0 ${isRegistered ? 'text-green-500' : 'text-muted-foreground'}`}
                     />
                 </button>
             </div>
@@ -301,12 +301,12 @@ export default function EventDetailPage() {
                 <div className="px-4 mt-5">
                     <div className="flex flex-wrap gap-2">
                         {event.department && (
-                            <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
+                            <span className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-xs font-medium">
                                 {event.department}
                             </span>
                         )}
                         {event.tags?.map((tag) => (
-                            <span key={tag} className="px-3 py-1 bg-primary-50 text-primary-600 rounded-full text-xs font-medium">
+                            <span key={tag} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
                                 #{tag}
                             </span>
                         ))}
@@ -316,8 +316,8 @@ export default function EventDetailPage() {
 
             {/* Description */}
             <div className="px-4 mt-6">
-                <h3 className="text-sm font-semibold text-gray-800 mb-2">About</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
+                <h3 className="text-sm font-semibold text-foreground mb-2">About</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                     {event.description}
                 </p>
             </div>
@@ -327,9 +327,9 @@ export default function EventDetailPage() {
             {/* Rules */}
             {event.rules && (
                 <div className="px-4 mt-5">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Rules & Instructions</h3>
-                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
-                        <p className="text-sm text-amber-800 leading-relaxed">{event.rules}</p>
+                    <h3 className="text-sm font-semibold text-foreground mb-2">Rules & Instructions</h3>
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                        <p className="text-sm text-amber-600 dark:text-amber-400 leading-relaxed">{event.rules}</p>
                     </div>
                 </div>
             )}
@@ -337,14 +337,14 @@ export default function EventDetailPage() {
             {/* Venue Details */}
             {capacity && (
                 <div className="px-4 mt-5">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Venue</h3>
-                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center">
+                    <h3 className="text-sm font-semibold text-foreground mb-2">Venue</h3>
+                    <div className="bg-card rounded-xl p-4 shadow-sm border border-border flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                             <Icon icon="solar:buildings-2-linear" width={20} />
                         </div>
                         <div>
-                            <div className="text-sm font-semibold text-gray-800">{event.location}</div>
-                            <div className="text-xs text-gray-400">Capacity: {capacity} people</div>
+                            <div className="text-sm font-semibold text-card-foreground">{event.location}</div>
+                            <div className="text-xs text-muted-foreground">Capacity: {capacity} people</div>
                         </div>
                     </div>
                 </div>
