@@ -12,8 +12,8 @@ import toast from 'react-hot-toast'
 import { useFormStore } from '@/lib/useFormStore'
 
 // ─── Helpers ──────────────────────────
-const INPUT = 'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none transition-all'
-const LABEL = 'text-xs font-semibold text-gray-500 uppercase mb-1 block'
+const INPUT = 'w-full px-3 py-2.5 border border-gray-200 dark:border-border rounded-xl text-sm bg-white dark:bg-background text-foreground focus:ring-2 focus:ring-primary-500 outline-none transition-all'
+const LABEL = 'text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase mb-1 block'
 
 function lsGet<T>(key: string, fallback: T): T {
     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback } catch { return fallback }
@@ -159,17 +159,17 @@ export default function EventForm({ formId, event, onSaved, minimized, pillIndex
 
     // ── Full-screen form ──
     return createPortal(
-        <div className="fixed inset-0 z-[100] bg-gray-50 flex flex-col" style={{ height: '100dvh' }}>
+        <div className="fixed inset-0 z-[100] bg-gray-50 dark:bg-background flex flex-col" style={{ height: '100dvh' }}>
             {/* Fixed Header */}
-            <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
+            <div className="bg-white dark:bg-card border-b border-gray-200 dark:border-border px-4 py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
                 <div className="flex items-center gap-3">
-                    <button onClick={handleClose} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
-                        <Icon icon="solar:close-circle-linear" width={22} className="text-gray-400" />
+                    <button onClick={handleClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-muted rounded-full transition-colors">
+                        <Icon icon="solar:close-circle-linear" width={22} className="text-gray-400 dark:text-muted-foreground" />
                     </button>
-                    <h2 className="font-bold text-gray-900 text-base">{isEdit ? 'Edit Event' : 'Create Event'}</h2>
+                    <h2 className="font-bold text-gray-900 dark:text-foreground text-base">{isEdit ? 'Edit Event' : 'Create Event'}</h2>
                 </div>
-                <button onClick={onToggleMinimize} className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="Minimize — your progress is saved">
-                    <Icon icon="solar:minimize-square-linear" width={20} className="text-gray-500" />
+                <button onClick={onToggleMinimize} className="p-2 hover:bg-gray-100 dark:hover:bg-muted rounded-full transition-colors" title="Minimize — your progress is saved">
+                    <Icon icon="solar:minimize-square-linear" width={20} className="text-gray-500 dark:text-muted-foreground" />
                 </button>
             </div>
 
@@ -184,7 +184,7 @@ export default function EventForm({ formId, event, onSaved, minimized, pillIndex
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className={LABEL}>Category</label>
-                        <select value={form.category} onChange={e => set('category', e.target.value)} className={`${INPUT} bg-white`}>
+                        <select value={form.category} onChange={e => set('category', e.target.value)} className={`${INPUT} bg-white dark:bg-background`}>
                             {EVENT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                         </select>
                     </div>
@@ -213,7 +213,7 @@ export default function EventForm({ formId, event, onSaved, minimized, pillIndex
                 <div>
                     <label className={LABEL}>Cover Image</label>
                     {form.image_url && (
-                        <div className="relative mb-2 rounded-xl overflow-hidden border border-gray-200">
+                        <div className="relative mb-2 rounded-xl overflow-hidden border border-gray-200 dark:border-border">
                             <img src={getOptimizedImageUrl(form.image_url, 400)} alt="" className="w-full h-36 object-cover" />
                             <button onClick={() => set('image_url', '')} className="absolute top-1.5 right-1.5 w-7 h-7 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80">×</button>
                         </div>
@@ -222,13 +222,13 @@ export default function EventForm({ formId, event, onSaved, minimized, pillIndex
                         <input type="file" ref={fileInputRef} accept="image/*" className="hidden"
                             onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
                         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                            className="flex-1 py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 font-medium hover:border-primary-300 hover:text-primary-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                            className="flex-1 py-2.5 border-2 border-dashed border-gray-200 dark:border-border rounded-xl text-sm text-gray-500 dark:text-muted-foreground font-medium hover:border-primary-300 hover:text-primary-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
                             {uploading
                                 ? <><Icon icon="solar:loading-bold" width={16} className="animate-spin" /> Uploading...</>
                                 : <><Icon icon="solar:camera-add-linear" width={16} /> Upload Image</>}
                         </button>
                         <button type="button" onClick={() => setShowUrlInput(!showUrlInput)}
-                            className="px-3 py-2.5 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors">
+                            className="px-3 py-2.5 border border-gray-200 dark:border-border rounded-xl text-gray-500 dark:text-muted-foreground hover:bg-gray-50 dark:hover:bg-muted transition-colors">
                             <Icon icon="solar:link-linear" width={16} />
                         </button>
                     </div>
@@ -244,10 +244,10 @@ export default function EventForm({ formId, event, onSaved, minimized, pillIndex
                         className={`${INPUT} resize-none`} rows={3} placeholder="Describe the event..." />
                 </div>
                 {/* Registration */}
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-muted/50 rounded-xl">
                     <input type="checkbox" checked={form.registration_required}
                         onChange={e => set('registration_required', e.target.checked)} className="w-4 h-4 rounded accent-primary-600" />
-                    <span className="text-sm text-gray-700 font-medium">Registration Required</span>
+                    <span className="text-sm text-gray-700 dark:text-foreground font-medium">Registration Required</span>
                 </div>
                 {form.registration_required && (
                     <>
@@ -261,9 +261,9 @@ export default function EventForm({ formId, event, onSaved, minimized, pillIndex
                                 <label className={LABEL}>Max Participants</label>
                                 <input type="number" value={form.max_participants} onChange={e => set('max_participants', e.target.value)} className={INPUT} placeholder="100" />
                             </div>
-                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-muted/50 rounded-xl">
                                 <input type="checkbox" checked={form.is_paid} onChange={e => set('is_paid', e.target.checked)} className="w-4 h-4 rounded accent-primary-600" />
-                                <span className="text-sm text-gray-700 font-medium">Paid</span>
+                                <span className="text-sm text-gray-700 dark:text-foreground font-medium">Paid</span>
                             </div>
                         </div>
                     </>
@@ -288,7 +288,7 @@ export default function EventForm({ formId, event, onSaved, minimized, pillIndex
             </div>
 
             {/* Fixed Submit Bar */}
-            <div className="flex-shrink-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+            <div className="flex-shrink-0 bg-white dark:bg-card border-t border-gray-200 dark:border-border p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
                 <button onClick={handleSubmit} disabled={saving}
                     className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-bold text-sm shadow-glow press-effect disabled:opacity-60 flex items-center justify-center gap-2">
                     {saving && <Icon icon="solar:loading-bold" width={18} className="animate-spin" />}

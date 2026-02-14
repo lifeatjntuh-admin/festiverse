@@ -11,7 +11,14 @@ const config: Config = {
                 mono: ['JetBrains Mono', 'monospace'],
             },
             colors: {
+                border: "hsl(var(--border))",
+                input: "hsl(var(--input))",
+                ring: "hsl(var(--ring))",
+                background: "hsl(var(--background))",
+                foreground: "hsl(var(--foreground))",
                 primary: {
+                    DEFAULT: "hsl(var(--primary))",
+                    foreground: "hsl(var(--primary-foreground))",
                     50: '#eff6ff',
                     100: '#dbeafe',
                     200: '#bfdbfe',
@@ -24,6 +31,8 @@ const config: Config = {
                     900: '#1e3a8a',
                 },
                 secondary: {
+                    DEFAULT: "hsl(var(--secondary))",
+                    foreground: "hsl(var(--secondary-foreground))",
                     50: '#fff7ed',
                     100: '#ffedd5',
                     200: '#fed7aa',
@@ -33,12 +42,30 @@ const config: Config = {
                     600: '#ea580c',
                     700: '#c2410c',
                 },
+                destructive: {
+                    DEFAULT: "hsl(var(--destructive))",
+                    foreground: "hsl(var(--destructive-foreground))",
+                },
+                muted: {
+                    DEFAULT: "hsl(var(--muted))",
+                    foreground: "hsl(var(--muted-foreground))",
+                },
                 accent: {
+                    DEFAULT: "hsl(var(--accent))",
+                    foreground: "hsl(var(--accent-foreground))",
                     purple: '#a855f7',
                     green: '#10b981',
                     pink: '#ec4899',
                     yellow: '#fbbf24',
                     cyan: '#06b6d4',
+                },
+                popover: {
+                    DEFAULT: "hsl(var(--popover))",
+                    foreground: "hsl(var(--popover-foreground))",
+                },
+                card: {
+                    DEFAULT: "hsl(var(--card))",
+                    foreground: "hsl(var(--card-foreground))",
                 },
             },
             boxShadow: {

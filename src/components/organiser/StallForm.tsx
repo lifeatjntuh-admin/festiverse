@@ -12,8 +12,8 @@ import toast from 'react-hot-toast'
 import { useFormStore } from '@/lib/useFormStore'
 
 // ─── Helpers ──────────────────────────
-const INPUT = 'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none transition-all'
-const LABEL = 'text-xs font-semibold text-gray-500 uppercase mb-1 block'
+const INPUT = 'w-full px-3 py-2.5 border border-gray-200 dark:border-border rounded-xl text-sm bg-white dark:bg-background text-foreground focus:ring-2 focus:ring-primary-500 outline-none transition-all'
+const LABEL = 'text-xs font-semibold text-gray-500 dark:text-muted-foreground uppercase mb-1 block'
 
 function lsGet<T>(key: string, fallback: T): T {
     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback } catch { return fallback }
@@ -146,17 +146,17 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
 
     // ── Full-screen form ──
     return createPortal(
-        <div className="fixed inset-0 z-[100] bg-gray-50 flex flex-col" style={{ height: '100dvh' }}>
+        <div className="fixed inset-0 z-[100] bg-gray-50 dark:bg-background flex flex-col" style={{ height: '100dvh' }}>
             {/* Fixed Header */}
-            <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
+            <div className="bg-white dark:bg-card border-b border-gray-200 dark:border-border px-4 py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
                 <div className="flex items-center gap-3">
-                    <button onClick={handleClose} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
-                        <Icon icon="solar:close-circle-linear" width={22} className="text-gray-400" />
+                    <button onClick={handleClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-muted rounded-full transition-colors">
+                        <Icon icon="solar:close-circle-linear" width={22} className="text-gray-400 dark:text-muted-foreground" />
                     </button>
-                    <h2 className="font-bold text-gray-900 text-base">{isEdit ? 'Edit Stall' : 'Create Stall'}</h2>
+                    <h2 className="font-bold text-gray-900 dark:text-foreground text-base">{isEdit ? 'Edit Stall' : 'Create Stall'}</h2>
                 </div>
-                <button onClick={onToggleMinimize} className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="Minimize — your progress is saved">
-                    <Icon icon="solar:minimize-square-linear" width={20} className="text-gray-500" />
+                <button onClick={onToggleMinimize} className="p-2 hover:bg-gray-100 dark:hover:bg-muted rounded-full transition-colors" title="Minimize — your progress is saved">
+                    <Icon icon="solar:minimize-square-linear" width={20} className="text-gray-500 dark:text-muted-foreground" />
                 </button>
             </div>
 
@@ -170,7 +170,7 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
                 {/* Category */}
                 <div>
                     <label className={LABEL}>Category</label>
-                    <select value={form.category} onChange={e => set('category', e.target.value)} className={`${INPUT} bg-white`}>
+                    <select value={form.category} onChange={e => set('category', e.target.value)} className={`${INPUT} bg-white dark:bg-background`}>
                         {STALL_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                     </select>
                 </div>
@@ -191,7 +191,7 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
                     {form.imageUrls.length > 0 && (
                         <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
                             {form.imageUrls.map((url: string, i: number) => (
-                                <div key={i} className="relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
+                                <div key={i} className="relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-gray-200 dark:border-border">
                                     <img src={getOptimizedImageUrl(url, 200)} alt="" className="w-full h-full object-cover" />
                                     <button onClick={() => removeStallImage(i)} className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center text-[10px] hover:bg-black/80">×</button>
                                 </div>
@@ -202,13 +202,13 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
                         <input type="file" ref={stallFileRef} accept="image/*" className="hidden"
                             onChange={e => e.target.files?.[0] && handleStallImageUpload(e.target.files[0])} />
                         <button type="button" onClick={() => stallFileRef.current?.click()} disabled={uploading}
-                            className="flex-1 py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 font-medium hover:border-primary-300 hover:text-primary-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                            className="flex-1 py-2.5 border-2 border-dashed border-gray-200 dark:border-border rounded-xl text-sm text-gray-500 dark:text-muted-foreground font-medium hover:border-primary-300 hover:text-primary-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
                             {uploading
                                 ? <><Icon icon="solar:loading-bold" width={16} className="animate-spin" /> Uploading...</>
                                 : <><Icon icon="solar:camera-add-linear" width={16} /> Add Image</>}
                         </button>
                         <button type="button" onClick={() => setShowUrlInput(!showUrlInput)}
-                            className="px-3 py-2.5 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors">
+                            className="px-3 py-2.5 border border-gray-200 dark:border-border rounded-xl text-gray-500 dark:text-muted-foreground hover:bg-gray-50 dark:hover:bg-muted transition-colors">
                             <Icon icon="solar:link-linear" width={16} />
                         </button>
                     </div>
@@ -234,7 +234,7 @@ export default function StallForm({ formId, stall, onSaved, minimized, pillIndex
             </div>
 
             {/* Fixed Submit Bar */}
-            <div className="flex-shrink-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+            <div className="flex-shrink-0 bg-white dark:bg-card border-t border-gray-200 dark:border-border p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
                 <button onClick={handleSubmit} disabled={saving}
                     className="w-full py-3.5 bg-primary-600 text-white rounded-xl font-bold text-sm shadow-glow press-effect disabled:opacity-60 flex items-center justify-center gap-2">
                     {saving && <Icon icon="solar:loading-bold" width={18} className="animate-spin" />}

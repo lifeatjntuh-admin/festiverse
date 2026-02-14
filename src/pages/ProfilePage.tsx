@@ -56,18 +56,17 @@ export default function ProfilePage() {
                             referrerPolicy="no-referrer"
                         />
                     ) : (
-                        <div className="w-full h-full rounded-full bg-primary-100 border-4 border-white flex items-center justify-center text-primary-600 text-3xl font-bold font-display">
+                        <div className="w-full h-full rounded-full bg-primary/10 border-4 border-card flex items-center justify-center text-primary text-3xl font-bold font-display">
                             {isLoggedIn ? initials : '?'}
                         </div>
                     )}
                     {/* Role Badge Overlay — removed from avatar to prevent overlap */}
                 </div>
-
-                <h2 className="text-xl font-bold text-gray-900 mt-4">{displayName}</h2>
+                <h2 className="text-xl font-bold text-foreground mt-4">{displayName}</h2>
                 {isLoggedIn ? (
-                    <p className="text-sm text-gray-500 font-medium">{displayEmail}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{displayEmail}</p>
                 ) : (
-                    <p className="text-sm text-gray-500 font-medium">Sign in to access all features</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Sign in to access all features</p>
                 )}
 
                 {/* Role Badges - below name/email */}
@@ -82,7 +81,7 @@ export default function ProfilePage() {
                     <button
                         onClick={handleSignIn}
                         disabled={isLoading}
-                        className="mt-4 mx-auto flex items-center justify-center gap-2.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl px-6 py-3 text-sm font-semibold text-gray-700 transition-all duration-200 active:scale-[0.98] shadow-sm disabled:opacity-60"
+                        className="mt-4 mx-auto flex items-center justify-center gap-2.5 bg-card hover:bg-muted/50 border border-border rounded-xl px-6 py-3 text-sm font-semibold text-card-foreground transition-all duration-200 active:scale-[0.98] shadow-sm disabled:opacity-60"
                     >
                         {isLoading ? (
                             <div className="w-4 h-4 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin" />
@@ -108,9 +107,9 @@ export default function ProfilePage() {
                         <div
                             key={label}
                             onClick={() => navigate(to)}
-                            className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm cursor-pointer active:scale-[0.97] transition-transform"
+                            className="p-3 bg-card rounded-xl border border-border shadow-sm cursor-pointer active:scale-[0.97] transition-transform"
                         >
-                            <div className="text-xl font-bold text-gray-900">{value}</div>
+                            <div className="text-xl font-bold text-card-foreground">{value}</div>
                             <div className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">{label}</div>
                         </div>
                     ))}
@@ -152,22 +151,22 @@ export default function ProfilePage() {
 
                     {/* Request Role */}
                     {isLoggedIn && !profile?.roles?.includes('super_admin') && !profile?.role_request && (
-                        <div className="w-full p-4 bg-white rounded-xl border border-gray-100 shadow-sm text-left space-y-3">
-                            <h3 className="font-semibold text-gray-900 text-sm">Request Roles</h3>
-                            <p className="text-xs text-gray-500">
+                        <div className="w-full p-4 bg-card rounded-xl border border-border shadow-sm text-left space-y-3">
+                            <h3 className="font-semibold text-card-foreground text-sm">Request Roles</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
                                 Want to host events or manage a stall? Request a role below.
                             </p>
                             <div className="grid grid-cols-2 gap-2">
                                 <button
                                     onClick={() => useAuthStore.getState().requestRole('event_manager')}
-                                    className="p-3 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg text-blue-700 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
+                                    className="p-3 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 border border-blue-100 dark:border-blue-500/20 rounded-lg text-blue-700 dark:text-blue-400 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
                                 >
                                     <Icon icon="solar:calendar-add-linear" width={20} />
                                     Event Manager
                                 </button>
                                 <button
                                     onClick={() => useAuthStore.getState().requestRole('stall_manager')}
-                                    className="p-3 bg-orange-50 hover:bg-orange-100 border border-orange-100 rounded-lg text-orange-700 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
+                                    className="p-3 bg-orange-50 hover:bg-orange-100 dark:bg-orange-500/10 dark:hover:bg-orange-500/20 border border-orange-100 dark:border-orange-500/20 rounded-lg text-orange-700 dark:text-orange-400 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
                                 >
                                     <Icon icon="solar:shop-2-linear" width={20} />
                                     Stall Manager
@@ -175,7 +174,7 @@ export default function ProfilePage() {
                             </div>
                             <button
                                 onClick={() => useAuthStore.getState().requestRole('team_member')}
-                                className="w-full text-xs text-gray-400 hover:text-gray-600 font-medium py-1"
+                                className="w-full text-xs text-gray-400 hover:text-foreground font-medium py-1"
                             >
                                 I'm just a Team Member
                             </button>
@@ -184,9 +183,9 @@ export default function ProfilePage() {
 
                     {/* Request Pending */}
                     {isLoggedIn && profile?.role_request && (
-                        <div className="w-full p-4 bg-yellow-50 border border-yellow-100 rounded-xl flex items-center justify-between text-yellow-700">
+                        <div className="w-full p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-between text-yellow-600 dark:text-yellow-500">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                                <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center">
                                     <Icon icon="solar:clock-circle-linear" width={18} />
                                 </div>
                                 <div className="text-left">
@@ -196,7 +195,7 @@ export default function ProfilePage() {
                             </div>
                             <button
                                 onClick={() => useAuthStore.getState().cancelRoleRequest()}
-                                className="text-xs font-semibold text-yellow-700 hover:text-red-600 underline decoration-yellow-700/30 hover:decoration-red-600/30 transition-colors"
+                                className="text-xs font-semibold hover:text-red-500 underline decoration-yellow-600/30 dark:decoration-yellow-500/30 hover:decoration-red-500/30 transition-colors"
                             >
                                 Cancel
                             </button>
@@ -206,42 +205,42 @@ export default function ProfilePage() {
 
                 {/* Menu Items */}
                 <div className="space-y-3 text-left">
-                    <button className="w-full p-4 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform">
+                    <button className="w-full p-4 bg-card rounded-xl border border-border shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                 <Icon icon="solar:ticket-linear" width={18} />
                             </div>
-                            <span className="font-semibold text-sm text-gray-700">{t('profile.myTickets')}</span>
+                            <span className="font-semibold text-sm text-card-foreground">{t('profile.myTickets')}</span>
                         </div>
                         <Icon icon="solar:alt-arrow-right-linear" className="text-gray-400" />
                     </button>
 
-                    <button className="w-full p-4 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform">
+                    <button className="w-full p-4 bg-card rounded-xl border border-border shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center">
                                 <Icon icon="solar:bookmark-linear" width={18} />
                             </div>
-                            <span className="font-semibold text-sm text-gray-700">{t('profile.savedEvents')}</span>
+                            <span className="font-semibold text-sm text-card-foreground">{t('profile.savedEvents')}</span>
                         </div>
                         <Icon icon="solar:alt-arrow-right-linear" className="text-gray-400" />
                     </button>
 
-                    <button className="w-full p-4 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform">
+                    <button className="w-full p-4 bg-card rounded-xl border border-border shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
                                 <Icon icon="solar:bell-bing-linear" width={18} />
                             </div>
-                            <span className="font-semibold text-sm text-gray-700">{t('profile.notifications')}</span>
+                            <span className="font-semibold text-sm text-card-foreground">{t('profile.notifications')}</span>
                         </div>
                         <Icon icon="solar:alt-arrow-right-linear" className="text-gray-400" />
                     </button>
 
-                    <button className="w-full p-4 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform">
+                    <button className="w-full p-4 bg-card rounded-xl border border-border shadow-sm flex items-center justify-between active:scale-[0.99] transition-transform">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-gray-500/10 text-gray-600 dark:text-gray-400 flex items-center justify-center">
                                 <Icon icon="solar:settings-linear" width={18} />
                             </div>
-                            <span className="font-semibold text-sm text-gray-700">{t('profile.settings')}</span>
+                            <span className="font-semibold text-sm text-card-foreground">{t('profile.settings')}</span>
                         </div>
                         <Icon icon="solar:alt-arrow-right-linear" className="text-gray-400" />
                     </button>
@@ -252,7 +251,7 @@ export default function ProfilePage() {
                         <button
                             onClick={handleSignOut}
                             disabled={isLoading}
-                            className="mt-8 w-full p-4 bg-red-50 hover:bg-red-100 rounded-xl border border-red-100 flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] disabled:opacity-60"
+                            className="mt-8 w-full p-4 bg-red-500/10 hover:bg-red-500/20 rounded-xl border border-red-500/20 flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] disabled:opacity-60"
                         >
                             <Icon icon="solar:logout-2-linear" width={18} className="text-red-500" />
                             <span className="text-sm font-semibold text-red-500">{t('profile.signOut')}</span>
@@ -267,8 +266,8 @@ export default function ProfilePage() {
                                 Delete my account
                             </button>
                         ) : (
-                            <div className="mt-3 p-4 bg-red-50 border border-red-200 rounded-xl">
-                                <p className="text-sm text-red-700 font-medium mb-3">
+                            <div className="mt-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                                <p className="text-sm text-red-600 dark:text-red-400 font-medium mb-3">
                                     Are you sure? Your profile and data will be deactivated.
                                 </p>
                                 <div className="flex gap-2">
@@ -289,7 +288,7 @@ export default function ProfilePage() {
                                     </button>
                                     <button
                                         onClick={() => setShowDeleteConfirm(false)}
-                                        className="flex-1 py-2.5 bg-white text-gray-600 rounded-lg text-sm font-semibold border border-gray-200"
+                                        className="flex-1 py-2.5 bg-card text-gray-600 dark:text-gray-300 rounded-lg text-sm font-semibold border border-border"
                                     >
                                         Cancel
                                     </button>

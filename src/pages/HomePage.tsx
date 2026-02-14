@@ -23,12 +23,12 @@ function useCountdown(target: Date) {
 }
 
 const CATEGORY_TAG_COLORS: Record<string, string> = {
-    cultural: 'text-purple-600 bg-purple-50',
-    tech: 'text-cyan-600 bg-cyan-50',
-    workshop: 'text-blue-600 bg-blue-50',
-    competition: 'text-red-600 bg-red-50',
-    sports: 'text-green-600 bg-green-50',
-    food: 'text-orange-600 bg-orange-50',
+    cultural: 'text-purple-600 bg-purple-50 dark:bg-purple-500/10 dark:text-purple-400',
+    tech: 'text-cyan-600 bg-cyan-50 dark:bg-cyan-500/10 dark:text-cyan-400',
+    workshop: 'text-blue-600 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400',
+    competition: 'text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400',
+    sports: 'text-green-600 bg-green-50 dark:bg-green-500/10 dark:text-green-400',
+    food: 'text-orange-600 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-400',
 }
 
 export default function HomePage() {
@@ -80,39 +80,39 @@ export default function HomePage() {
             {/* Featured Events (Carousel) */}
             <div className="mb-8">
                 <div className="flex justify-between items-center px-4 mb-3">
-                    <h3 className="text-lg font-semibold tracking-tight text-gray-900">{t('home.featuredEvents')}</h3>
-                    <Link to="/schedule" className="text-xs font-medium text-primary-600 hover:text-primary-700">{t('home.seeAll')}</Link>
+                    <h3 className="text-lg font-semibold tracking-tight text-foreground">{t('home.featuredEvents')}</h3>
+                    <Link to="/schedule" className="text-xs font-medium text-primary hover:text-primary/80">{t('home.seeAll')}</Link>
                 </div>
 
                 <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x-mandatory no-scrollbar">
                     {featuredLoading ? (
                         // Skeleton cards
                         Array.from({ length: 3 }).map((_, i) => (
-                            <div key={i} className="snap-center shrink-0 w-[280px] bg-white rounded-2xl border border-gray-100 shadow-soft overflow-hidden">
-                                <div className="h-40 bg-gray-100 animate-pulse" />
+                            <div key={i} className="snap-center shrink-0 w-[280px] bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
+                                <div className="h-40 bg-muted animate-pulse" />
                                 <div className="p-4 space-y-2">
-                                    <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
-                                    <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2" />
+                                    <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
+                                    <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
                                 </div>
                             </div>
                         ))
                     ) : featured.length === 0 ? (
                         <div className="w-full flex flex-col items-center justify-center py-8 px-4">
-                            <Icon icon="solar:star-shine-linear" width={40} className="text-gray-300 mb-2" />
-                            <p className="text-sm text-gray-400 font-medium">No featured events yet</p>
+                            <Icon icon="solar:star-shine-linear" width={40} className="text-muted-foreground mb-2" />
+                            <p className="text-sm text-muted-foreground font-medium">No featured events yet</p>
                         </div>
                     ) : (
                         featured.map((event) => (
                             <Link
                                 to={`/events/${event.id}`}
                                 key={event.id}
-                                className="snap-center shrink-0 w-[280px] bg-white rounded-2xl border border-gray-100 shadow-soft overflow-hidden group active:scale-[0.98] transition-transform duration-200"
+                                className="snap-center shrink-0 w-[280px] bg-card rounded-2xl border border-border shadow-soft overflow-hidden group active:scale-[0.98] transition-transform duration-200"
                             >
-                                <div className="h-40 bg-gray-200 relative overflow-hidden">
+                                <div className="h-40 bg-muted relative overflow-hidden">
                                     {event.image_url && (
                                         <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" />
                                     )}
-                                    <div className={`absolute top-3 left-3 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${CATEGORY_TAG_COLORS[event.category] || 'bg-white/90 text-gray-900'}`}>
+                                    <div className={`absolute top-3 left-3 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${CATEGORY_TAG_COLORS[event.category] || 'bg-background/90 text-foreground'}`}>
                                         {event.category === 'cultural' && <Icon icon="solar:fire-bold" className="text-orange-500" />}
                                         {event.category === 'competition' && <Icon icon="solar:cup-star-bold" className="text-yellow-500" />}
                                         {event.category === 'workshop' && <Icon icon="solar:code-bold" className="text-purple-500" />}
@@ -120,8 +120,8 @@ export default function HomePage() {
                                     </div>
                                 </div>
                                 <div className="p-4">
-                                    <h4 className="text-base font-semibold text-gray-900 mb-1 leading-tight">{event.title}</h4>
-                                    <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                                    <h4 className="text-base font-semibold text-card-foreground mb-1 leading-tight">{event.title}</h4>
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
                                         <span className="flex items-center gap-1">
                                             <Icon icon="solar:calendar-linear" />
                                             {format(new Date(event.start_time), 'MMM d')}
@@ -131,7 +131,7 @@ export default function HomePage() {
                                             {event.location}
                                         </span>
                                     </div>
-                                    <div className="w-full py-2.5 bg-gray-50 hover:bg-primary-50 text-gray-900 hover:text-primary-600 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 border border-gray-100">
+                                    <div className="w-full py-2.5 bg-muted hover:bg-primary/10 text-foreground hover:text-primary rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 border border-border">
                                         {t('home.viewDetails')}
                                     </div>
                                 </div>
@@ -143,19 +143,19 @@ export default function HomePage() {
 
             {/* Explore Grid */}
             <div className="px-4 mb-8">
-                <h3 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">{t('home.explore')}</h3>
+                <h3 className="text-lg font-semibold tracking-tight text-foreground mb-4">{t('home.explore')}</h3>
                 <div className="grid grid-cols-4 gap-3">
                     {[
-                        { key: 'music', category: 'cultural', icon: 'solar:music-note-linear', bg: 'bg-purple-50', border: 'border-purple-100', text: 'text-purple-600' },
-                        { key: 'tech', category: 'tech', icon: 'solar:laptop-minimalistic-linear', bg: 'bg-cyan-50', border: 'border-cyan-100', text: 'text-cyan-600' },
-                        { key: 'food', category: 'food', icon: 'solar:chef-hat-linear', bg: 'bg-orange-50', border: 'border-orange-100', text: 'text-orange-600' },
-                        { key: 'games', category: 'sports', icon: 'solar:gamepad-linear', bg: 'bg-green-50', border: 'border-green-100', text: 'text-green-600' },
+                        { key: 'music', category: 'cultural', icon: 'solar:music-note-linear', bg: 'bg-purple-50 dark:bg-purple-500/10', border: 'border-purple-100 dark:border-purple-500/20', text: 'text-purple-600 dark:text-purple-400' },
+                        { key: 'tech', category: 'tech', icon: 'solar:laptop-minimalistic-linear', bg: 'bg-cyan-50 dark:bg-cyan-500/10', border: 'border-cyan-100 dark:border-cyan-500/20', text: 'text-cyan-600 dark:text-cyan-400' },
+                        { key: 'food', category: 'food', icon: 'solar:chef-hat-linear', bg: 'bg-orange-50 dark:bg-orange-500/10', border: 'border-orange-100 dark:border-orange-500/20', text: 'text-orange-600 dark:text-orange-400' },
+                        { key: 'games', category: 'sports', icon: 'solar:gamepad-linear', bg: 'bg-green-50 dark:bg-green-500/10', border: 'border-green-100 dark:border-green-500/20', text: 'text-green-600 dark:text-green-400' },
                     ].map(({ key, category, icon, bg, border, text }) => (
                         <Link to={`/schedule?category=${category}`} key={key} className="flex flex-col items-center gap-2 group cursor-pointer">
                             <div className={`w-16 h-16 rounded-2xl ${bg} flex items-center justify-center ${text} ${border} border group-active:scale-95 transition-transform`}>
                                 <Icon icon={icon} width={28} />
                             </div>
-                            <span className="text-xs font-medium text-gray-600">{t(`categories.${key}`)}</span>
+                            <span className="text-xs font-medium text-muted-foreground">{t(`categories.${key}`)}</span>
                         </Link>
                     ))}
                 </div>
@@ -164,22 +164,22 @@ export default function HomePage() {
             {/* Quick Actions */}
             <div className="px-4 mb-8">
                 <div className="grid grid-cols-2 gap-3">
-                    <Link to="/schedule" className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col justify-between h-28 active:scale-[0.98] transition-transform cursor-pointer">
-                        <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Link to="/schedule" className="p-4 bg-card border border-border rounded-2xl shadow-sm flex flex-col justify-between h-28 active:scale-[0.98] transition-transform cursor-pointer">
+                        <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                             <Icon icon="solar:calendar-add-linear" width={18} />
                         </div>
                         <div>
-                            <h4 className="text-sm font-semibold text-gray-900">{t('home.mySchedule')}</h4>
-                            <p className="text-[10px] text-gray-500 font-medium mt-0.5">{t('home.eventsSaved', { count: bookmarkCount })}</p>
+                            <h4 className="text-sm font-semibold text-card-foreground">{t('home.mySchedule')}</h4>
+                            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{t('home.eventsSaved', { count: bookmarkCount })}</p>
                         </div>
                     </Link>
-                    <div className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col justify-between h-28 active:scale-[0.98] transition-transform cursor-pointer">
-                        <div className="w-8 h-8 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center">
+                    <div className="p-4 bg-card border border-border rounded-2xl shadow-sm flex flex-col justify-between h-28 active:scale-[0.98] transition-transform cursor-pointer">
+                        <div className="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 flex items-center justify-center">
                             <Icon icon="solar:map-arrow-square-linear" width={18} />
                         </div>
                         <div>
-                            <h4 className="text-sm font-semibold text-gray-900">{t('home.venueMap')}</h4>
-                            <p className="text-[10px] text-gray-500 font-medium mt-0.5">{t('home.navigateCampus')}</p>
+                            <h4 className="text-sm font-semibold text-card-foreground">{t('home.venueMap')}</h4>
+                            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{t('home.navigateCampus')}</p>
                         </div>
                     </div>
                 </div>
@@ -187,45 +187,45 @@ export default function HomePage() {
 
             {/* Trending Now (from DB) */}
             <div className="px-4 pb-4">
-                <h3 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">{t('home.trendingNow')}</h3>
+                <h3 className="text-lg font-semibold tracking-tight text-foreground mb-4">{t('home.trendingNow')}</h3>
                 <div className="flex flex-col gap-3">
                     {allLoading ? (
                         Array.from({ length: 2 }).map((_, i) => (
-                            <div key={i} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
-                                <div className="w-16 h-16 rounded-lg bg-gray-100 animate-pulse" />
+                            <div key={i} className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border shadow-sm">
+                                <div className="w-16 h-16 rounded-lg bg-muted animate-pulse" />
                                 <div className="flex-1 space-y-2">
-                                    <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
-                                    <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2" />
+                                    <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
+                                    <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
                                 </div>
                             </div>
                         ))
                     ) : trending.length === 0 ? (
                         <div className="text-center py-8">
-                            <Icon icon="solar:fire-linear" width={40} className="text-gray-300 mx-auto mb-2" />
-                            <p className="text-sm text-gray-400 font-medium">No trending events yet</p>
+                            <Icon icon="solar:fire-linear" width={40} className="text-muted-foreground mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground font-medium">No trending events yet</p>
                         </div>
                     ) : (
                         trending.map((event) => (
                             <Link
                                 to={`/events/${event.id}`}
                                 key={event.id}
-                                className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm active:bg-gray-50 transition-colors cursor-pointer"
+                                className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border shadow-sm active:bg-muted/50 transition-colors cursor-pointer"
                             >
                                 {event.image_url && (
                                     <img src={event.image_url} className="w-16 h-16 rounded-lg object-cover" alt={event.title} />
                                 )}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-start">
-                                        <h4 className="text-sm font-semibold text-gray-900 truncate">{event.title}</h4>
+                                        <h4 className="text-sm font-semibold text-card-foreground truncate">{event.title}</h4>
                                         {!event.is_paid ? (
-                                            <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded shrink-0 ml-2">{t('home.free')}</span>
+                                            <span className="text-[10px] font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10 px-1.5 py-0.5 rounded shrink-0 ml-2">{t('home.free')}</span>
                                         ) : (
-                                            <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded shrink-0 ml-2">₹{event.price}</span>
+                                            <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 px-1.5 py-0.5 rounded shrink-0 ml-2">₹{event.price}</span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1 truncate">{event.description?.slice(0, 60)}...</p>
+                                    <p className="text-xs text-muted-foreground mt-1 truncate">{event.description?.slice(0, 60)}...</p>
                                     <div className="flex items-center gap-2 mt-2">
-                                        <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
+                                        <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
                                             <Icon icon="solar:calendar-linear" width={12} />
                                             {format(new Date(event.start_time), 'MMM d, h:mm a')}
                                         </span>
