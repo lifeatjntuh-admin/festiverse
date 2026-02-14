@@ -7,6 +7,7 @@ import { useEventsByDay, useBookmarks, useAllEvents } from '@/lib/useData'
 import { useAuthStore } from '@/lib/useAuthStore'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
+import { calculateEventPositions, HOUR_HEIGHT, START_HOUR, END_HOUR } from '@/lib/scheduleLayout'
 
 const DAYS = ['day1', 'day2'] as const
 const FILTERS = ['allEvents', 'technical', 'cultural', 'workshops', 'tech', 'sports', 'food'] as const
@@ -161,56 +162,70 @@ export default function SchedulePage() {
                 </>
             )}
 
-            {/* Timeline */}
-            <div className="px-4 mt-2">
+            {/* Timeline Grid */}
+            <div className="flex-1 overflow-y-auto relative no-scrollbar" style={{ height: 'calc(100vh - 200px)' }}>
                 {viewLoading ? (
-                    <div className="relative pl-6 border-l-2 border-border space-y-6">
-                        {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="relative">
-                                <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-border border-2 border-background" />
-                                <div className="h-3 w-16 bg-muted rounded mb-2 animate-pulse" />
-                                <div className="bg-card rounded-xl p-4 shadow-sm border border-border space-y-2">
-                                    <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
-                                    <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
-                                </div>
-                            </div>
-                        ))}
+                    <div className="flex items-center justify-center h-full">
+                        <Icon icon="svg-spinners:3-dots-fade" width={40} className="text-muted-foreground" />
                     </div>
                 ) : filteredEvents.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in">
+                    <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in h-full">
                         <Icon icon="solar:calendar-search-linear" className="text-muted-foreground mx-auto mb-3" width={48} />
                         <p className="text-sm text-muted-foreground font-medium">{t('schedule.noFilterResults')}</p>
                     </div>
                 ) : (
-                    <div className="relative pl-6 border-l-2 border-border space-y-6">
-                        {filteredEvents.map((event) => (
-                            <Link to={`/events/${event.id}`} key={event.id} className="relative block">
-                                <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-primary border-2 border-background" />
-                                <div className="text-xs text-muted-foreground font-mono mb-2">
-                                    {format(new Date(event.start_time), 'h:mm a')}
-                                </div>
-                                <div className="bg-card rounded-xl p-4 shadow-sm border border-border active:bg-muted/50 transition-colors">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm font-semibold text-card-foreground">{event.title}</h4>
-                                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                                <Icon icon="solar:map-point-linear" width={14} />
-                                                    <span>{event.location}</span>
-                                            </div>
-                                                {event.end_time && (
-                                                <div className="flex items-center gap-1 text-xs text-muted-foreground/80 mt-0.5">
-                                                    <Icon icon="solar:clock-circle-linear" width={14} />
-                                                    <span>{format(new Date(event.start_time), 'h:mm a')} – {format(new Date(event.end_time), 'h:mm a')}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ml-2 ${TAG_COLORS[event.category] || 'text-primary bg-primary/10'}`}>
-                                                {t(`categories.${event.category}`, { defaultValue: event.category.charAt(0).toUpperCase() + event.category.slice(1) })}
-                                            </span>
-                                    </div>
-                                </div>
-                            </Link>
+                    <div className="relative min-h-[1200px] w-full bg-background/50" style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT + 50 }}>
+                        {/* Time Slots Background */}
+                        {Array.from({ length: END_HOUR - START_HOUR + 1 }).map((_, i) => (
+                            <div
+                                key={i}
+                                className="absolute w-full border-t border-border/40 text-xs text-muted-foreground/40 pl-2 pointer-events-none"
+                                style={{ top: i * HOUR_HEIGHT }}
+                            >
+                                <span className="-mt-3 block bg-background/50 backdrop-blur-sm w-fit px-1 rounded">
+                                    {format(new Date().setHours(START_HOUR + i, 0), 'h a')}
+                                </span>
+                            </div>
                         ))}
+
+                        {/* Events Container */}
+                        <div className="absolute inset-0 ml-12 mr-2 mt-2">
+                            {calculateEventPositions(filteredEvents).map((event) => (
+                                <Link
+                                    to={`/events/${event.id}`}
+                                    key={event.id}
+                                    className={cn(
+                                        "absolute rounded-lg border p-2 flex flex-col justify-between overflow-hidden hover:z-20 hover:scale-[1.02] transition-all",
+                                        "backdrop-blur-md bg-opacity-70 shadow-sm",
+                                        TAG_COLORS[event.category] ? (TAG_COLORS[event.category] || '').replace('text-', 'border-').replace('bg-', 'bg-opacity-10 bg-') : 'border-primary/20 bg-primary/5'
+                                    )}
+                                    style={{
+                                        top: event.top,
+                                        height: event.height,
+                                        left: `${event.left}%`,
+                                        width: `${event.width}%`,
+                                    }}
+                                >
+                                    <div className="pointer-events-none">
+                                        <h4 className="text-xs font-bold leading-tight line-clamp-2">
+                                            {event.title}
+                                        </h4>
+                                        <div className="flex items-center gap-1 text-[10px] opacity-80 mt-1">
+                                            <Icon icon="solar:map-point-linear" width={10} />
+                                            <span className="truncate">{event.location}</span>
+                                        </div>
+                                    </div>
+                                    {event.height > 60 && (
+                                        <div className="text-[10px] opacity-70 font-mono mt-auto">
+                                            {format(new Date(event.start_time), 'h:mm')} - {format(new Date(event.end_time), 'h:mm a')}
+                                        </div>
+                                    )}
+                                </Link>
+                            ))}
+                        </div>
+
+                        {/* Current Time Line (Only if today) */}
+                        {/* Logic for current time line would go here, omitting for brevity in this step */}
                     </div>
                 )}
             </div>
