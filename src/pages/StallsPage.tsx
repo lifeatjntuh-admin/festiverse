@@ -1,3 +1,4 @@
+
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { useState } from 'react'
@@ -12,12 +13,7 @@ const FILTERS = ['all', 'food', 'merchandise', 'club', 'sponsor'] as const
 // Alternate heights for masonry feel
 const HEIGHTS = ['h-36', 'h-40', 'h-32', 'h-28', 'h-36', 'h-32', 'h-40', 'h-28']
 
-const CATEGORY_LABELS: Record<string, string> = {
-    food: 'Food',
-    merchandise: 'Merch',
-    club: 'Club',
-    sponsor: 'Sponsor',
-}
+// category display labels come from translations (fallbacks handled via defaultValue)
 
 export default function StallsPage() {
     const { t } = useTranslation()
@@ -37,11 +33,11 @@ export default function StallsPage() {
 
     const handleStallBookmark = async (stallId: string) => {
         if (!user) {
-            toast('Please sign in to bookmark', { icon: '🔒' })
+            toast(t('stalls.pleaseSignIn') || 'Please sign in to bookmark', { icon: '🔒' })
             return
         }
         const nowBookmarked = await toggleStallBookmark(stallId)
-        toast.success(nowBookmarked ? 'Stall saved! ⭐' : 'Removed from saved')
+        toast.success(nowBookmarked ? (t('stalls.savedSuccess') || 'Stall saved! ⭐') : (t('stalls.removedSaved') || 'Removed from saved'))
     }
 
     return (
@@ -50,13 +46,13 @@ export default function StallsPage() {
                 <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border sticky top-0 z-10">
                     <div className="flex items-center gap-2">
                         <Icon icon="solar:heart-bold" width={18} className="text-red-500" />
-                        <h3 className="text-sm font-bold text-card-foreground">Saved Stalls</h3>
+                        <h3 className="text-sm font-bold text-card-foreground">{t('stalls.saved')}</h3>
                     </div>
                     <button
                         onClick={() => setSearchParams({})}
                         className="text-xs font-semibold text-primary px-3 py-1 rounded-full bg-primary/10 active:scale-95 transition-transform"
                     >
-                        Show All
+                        {t('stalls.showAll')}
                     </button>
                 </div>
             ) : (
@@ -93,7 +89,7 @@ export default function StallsPage() {
                 ) : displayStalls.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in col-span-full">
                         <Icon icon={viewMode === 'saved' ? 'solar:heart-broken-linear' : 'solar:shop-2-linear'} className="text-muted-foreground mx-auto mb-3" width={48} />
-                        <p className="text-sm text-muted-foreground font-medium">{viewMode === 'saved' ? 'No saved stalls yet' : 'No stalls in this category'}</p>
+                        <p className="text-sm text-muted-foreground font-medium">{viewMode === 'saved' ? t('stalls.noSaved') : t('stalls.noInCategory')}</p>
                     </div>
                 ) : (
                     displayStalls.map((stall, i) => (
@@ -110,7 +106,7 @@ export default function StallsPage() {
                                     />
                                 )}
                                 <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                                    {CATEGORY_LABELS[stall.category] || stall.category}
+                                    {t(`categories.${stall.category}`, { defaultValue: stall.category })}
                                 </div>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleStallBookmark(stall.id) }}
@@ -129,7 +125,7 @@ export default function StallsPage() {
                                 {stall.menu_items && Array.isArray(stall.menu_items) && stall.menu_items.length > 0 && (
                                     <div className="flex items-center justify-between mt-2">
                                         <span className="text-[10px] text-muted-foreground font-medium">
-                                            {stall.menu_items.length} items
+                                            {t('stalls.items', { count: stall.menu_items.length })}
                                         </span>
                                         <button className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center">
                                             <Icon icon="solar:map-arrow-right-linear" width={14} />

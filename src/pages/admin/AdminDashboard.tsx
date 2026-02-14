@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '@iconify/react'
@@ -9,6 +10,7 @@ import RoleBadge from '@/components/admin/RoleBadge'
 import toast from 'react-hot-toast'
 
 export default function AdminDashboard() {
+    const { t } = useTranslation()
     const navigate = useNavigate()
     const { profile } = useAuthStore()
     const [users, setUsers] = useState<Profile[]>([])
@@ -37,7 +39,7 @@ export default function AdminDashboard() {
             const hasAdminRole = profile.roles?.some(r => ['super_admin', 'app_admin'].includes(r))
 
             if (!hasAdminRole) {
-                toast.error('Unauthorized access')
+                toast.error(t('admin.unauthorized'))
                 navigate('/')
             }
         }
@@ -57,7 +59,7 @@ export default function AdminDashboard() {
             .limit(50) // Pagination later
 
         if (error) {
-            toast.error('Failed to load users')
+            toast.error(t('admin.failedLoadUsers'))
         } else {
             setUsers(data as Profile[])
         }
@@ -111,7 +113,7 @@ export default function AdminDashboard() {
     }
 
     if (loading) {
-        return <div className="p-8 text-center">Loading Admin Dashboard...</div>
+        return <div className="p-8 text-center">{t('admin.loading')}</div>
     }
 
     // Role helpers
@@ -124,8 +126,8 @@ export default function AdminDashboard() {
                     <Icon icon="solar:arrow-left-linear" width={24} className="text-gray-600 dark:text-foreground" />
                 </button>
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900 dark:text-foreground">Admin Dashboard</h1>
-                    <p className="text-xs text-gray-500 dark:text-muted-foreground">Manage users and roles</p>
+                    <h1 className="text-lg font-bold text-gray-900 dark:text-foreground">{t('admin.title')}</h1>
+                    <p className="text-xs text-gray-500 dark:text-muted-foreground">{t('admin.manageUsers')}</p>
                 </div>
             </div>
 
@@ -138,22 +140,22 @@ export default function AdminDashboard() {
                             <Icon icon="solar:users-group-rounded-bold" width={20} />
                         </div>
                         <div className="text-2xl font-bold text-gray-900 dark:text-foreground">{stats.totalUsers}</div>
-                        <div className="text-xs text-gray-500 dark:text-muted-foreground font-medium uppercase tracking-wide">Total Users</div>
+                        <div className="text-xs text-gray-500 dark:text-muted-foreground font-medium uppercase tracking-wide">{t('admin.totalUsers')}</div>
                     </div>
                     <div className="bg-white dark:bg-card p-4 rounded-xl border border-gray-100 dark:border-border shadow-sm flex flex-col items-center justify-center text-center">
                         <div className="w-10 h-10 rounded-full bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center mb-2">
                             <Icon icon="solar:shield-user-bold" width={20} />
                         </div>
                         <div className="text-2xl font-bold text-gray-900 dark:text-foreground">{stats.totalAdmins}</div>
-                        <div className="text-xs text-gray-500 dark:text-muted-foreground font-medium uppercase tracking-wide">Admins</div>
+                        <div className="text-xs text-gray-500 dark:text-muted-foreground font-medium uppercase tracking-wide">{t('admin.admins')}</div>
                     </div>
                 </div>
 
                 {/* User Management */}
                 <div className="bg-white dark:bg-card rounded-2xl border border-gray-200 dark:border-border shadow-sm overflow-hidden">
                     <div className="p-4 border-b border-gray-100 dark:border-border flex items-center justify-between">
-                        <h2 className="font-bold text-gray-900 dark:text-foreground">User Management</h2>
-                        <button className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">Export CSV</button>
+                        <h2 className="font-bold text-gray-900 dark:text-foreground">{t('admin.userManagement')}</h2>
+                        <button className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">{t('admin.exportCSV')}</button>
                     </div>
 
                     {/* Search & Filter */}
@@ -162,7 +164,7 @@ export default function AdminDashboard() {
                             <Icon icon="solar:magnifer-linear" className="absolute left-3 top-2.5 text-gray-400 dark:text-muted-foreground" width={18} />
                             <input
                                 type="text"
-                                placeholder="Search users by name, email..."
+                                placeholder={t('admin.searchPlaceholder')}
                                 className="w-full pl-10 pr-4 py-2 bg-white dark:bg-background border border-gray-200 dark:border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -174,7 +176,7 @@ export default function AdminDashboard() {
                                 onClick={() => setRoleFilter('all')}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors border ${roleFilter === 'all' ? 'bg-gray-900 dark:bg-white text-white dark:text-black border-gray-900 dark:border-white' : 'bg-white dark:bg-card text-gray-600 dark:text-muted-foreground border-gray-200 dark:border-border hover:border-gray-300 dark:hover:border-gray-600'}`}
                             >
-                                All Users
+                                {t('admin.allUsers')}
                             </button>
                             {availableRoles.map(role => (
                                 <button

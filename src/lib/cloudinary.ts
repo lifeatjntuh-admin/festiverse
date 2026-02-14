@@ -3,24 +3,35 @@ const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 export const uploadImage = async (file: File): Promise<string> => {
     if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-        throw new Error('Cloudinary not configured')
+        throw new Error('Cloudinary not configured: Missing Cloud Name or Upload Preset')
     }
 
     const formData = new FormData()
     formData.append('file', file)
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-    formData.append('folder', 'festiverse')
+    formData.append('folder', 'festiverse') // Optional: folder name
 
-    const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-            method: 'POST',
-            body: formData,
+    try {
+        const response = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            {
+                method: 'POST',
+                body: formData,
+            }
+        )
+
+        const data = await response.json()
+
+        if (!response.ok) {
+            console.error('Cloudinary upload error details:', data)
+            throw new Error(data.error?.message || `Upload failed with status ${response.status}`)
         }
-    )
 
-    const data = await response.json()
-    return data.secure_url as string
+        return data.secure_url as string
+    } catch (error) {
+        console.error('Image upload failed:', error)
+        throw error
+    }
 }
 
 export const getOptimizedImageUrl = (url: string, width: number = 800): string => {

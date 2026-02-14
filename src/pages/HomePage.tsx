@@ -99,7 +99,7 @@ export default function HomePage() {
                     ) : featured.length === 0 ? (
                         <div className="w-full flex flex-col items-center justify-center py-8 px-4">
                             <Icon icon="solar:star-shine-linear" width={40} className="text-muted-foreground mb-2" />
-                            <p className="text-sm text-muted-foreground font-medium">No featured events yet</p>
+                            <p className="text-sm text-muted-foreground font-medium">{t('home.noFeatured')}</p>
                         </div>
                     ) : (
                         featured.map((event) => (
@@ -116,7 +116,7 @@ export default function HomePage() {
                                         {event.category === 'cultural' && <Icon icon="solar:fire-bold" className="text-orange-500" />}
                                         {event.category === 'competition' && <Icon icon="solar:cup-star-bold" className="text-yellow-500" />}
                                         {event.category === 'workshop' && <Icon icon="solar:code-bold" className="text-purple-500" />}
-                                        {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
+                                        {t(`categories.${event.category}`, { defaultValue: event.category.charAt(0).toUpperCase() + event.category.slice(1) })}
                                     </div>
                                 </div>
                                 <div className="p-4">
@@ -202,7 +202,7 @@ export default function HomePage() {
                     ) : trending.length === 0 ? (
                         <div className="text-center py-8">
                             <Icon icon="solar:fire-linear" width={40} className="text-muted-foreground mx-auto mb-2" />
-                            <p className="text-sm text-muted-foreground font-medium">No trending events yet</p>
+                            <p className="text-sm text-muted-foreground font-medium">{t('home.noTrending')}</p>
                         </div>
                     ) : (
                         trending.map((event) => (

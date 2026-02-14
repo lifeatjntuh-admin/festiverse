@@ -111,14 +111,14 @@ export default function SchedulePage() {
                             className={viewMode === 'saved' ? 'text-primary-600' : 'text-green-500'}
                         />
                         <h3 className="text-sm font-bold text-card-foreground">
-                            {viewMode === 'saved' ? 'Saved Events' : 'Registered Events'}
+                            {viewMode === 'saved' ? t('schedule.saved') : t('schedule.registered')}
                         </h3>
                     </div>
                     <button
                         onClick={() => setSearchParams({})}
                         className="text-xs font-semibold text-primary px-3 py-1 rounded-full bg-primary/10 active:scale-95 transition-transform"
                     >
-                        Show All
+                        {t('common.showAll')}
                     </button>
                 </div>
             ) : (
@@ -179,7 +179,7 @@ export default function SchedulePage() {
                 ) : filteredEvents.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in">
                         <Icon icon="solar:calendar-search-linear" className="text-muted-foreground mx-auto mb-3" width={48} />
-                        <p className="text-sm text-muted-foreground font-medium">No events for this filter</p>
+                        <p className="text-sm text-muted-foreground font-medium">{t('schedule.noFilterResults')}</p>
                     </div>
                 ) : (
                     <div className="relative pl-6 border-l-2 border-border space-y-6">
@@ -195,18 +195,18 @@ export default function SchedulePage() {
                                             <h4 className="text-sm font-semibold text-card-foreground">{event.title}</h4>
                                             <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                                                 <Icon icon="solar:map-point-linear" width={14} />
-                                                <span>{event.location}</span>
+                                                    <span>{event.location}</span>
                                             </div>
-                                            {event.end_time && (
+                                                {event.end_time && (
                                                 <div className="flex items-center gap-1 text-xs text-muted-foreground/80 mt-0.5">
                                                     <Icon icon="solar:clock-circle-linear" width={14} />
                                                     <span>{format(new Date(event.start_time), 'h:mm a')} – {format(new Date(event.end_time), 'h:mm a')}</span>
                                                 </div>
                                             )}
                                         </div>
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ml-2 ${TAG_COLORS[event.category] || 'text-primary bg-primary/10'}`}>
-                                            {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
-                                        </span>
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ml-2 ${TAG_COLORS[event.category] || 'text-primary bg-primary/10'}`}>
+                                                {t(`categories.${event.category}`, { defaultValue: event.category.charAt(0).toUpperCase() + event.category.slice(1) })}
+                                            </span>
                                     </div>
                                 </div>
                             </Link>

@@ -20,20 +20,20 @@ export default function ProfilePage() {
     const handleSignIn = async () => {
         try {
             await signInWithGoogle()
-            toast.success('Welcome to Festiverse! 🎉')
+            toast.success(t('auth.welcome') + ' 🎉')
         } catch {
-            toast.error('Sign-in failed. Please try again.')
+            toast.error(t('auth.signInFailed'))
         }
     }
 
     const handleSignOut = async () => {
         await signOut()
-        toast.success('Signed out successfully')
+        toast.success(t('auth.signedOut'))
         navigate('/', { replace: true })
     }
 
     // Derive display values
-    const displayName = profile?.name || user?.displayName || 'Guest User'
+    const displayName = profile?.name || user?.displayName || t('profile.guest')
     const displayEmail = profile?.email || user?.email || ''
     const avatarUrl = profile?.avatar_url || user?.photoURL || ''
     const initials = displayName
@@ -66,7 +66,7 @@ export default function ProfilePage() {
                 {isLoggedIn ? (
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{displayEmail}</p>
                 ) : (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Sign in to access all features</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('profile.signInPrompt')}</p>
                 )}
 
                 {/* Role Badges - below name/email */}
@@ -93,7 +93,7 @@ export default function ProfilePage() {
                                 <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335" />
                             </svg>
                         )}
-                        {isLoading ? 'Signing in...' : 'Continue with Google'}
+                        {isLoading ? t('auth.signingIn') : t('auth.signInWithGoogle')}
                     </button>
                 ) : null}
 
@@ -125,8 +125,8 @@ export default function ProfilePage() {
                                     <Icon icon="solar:shield-user-bold" width={18} />
                                 </div>
                                 <div className="text-left">
-                                    <div className="font-bold text-sm">Admin Dashboard</div>
-                                    <div className="text-[10px] text-white/80">Manage users & roles</div>
+                                    <div className="font-bold text-sm">{t('profile.adminDashboard')}</div>
+                                    <div className="text-[10px] text-white/80">{t('profile.manageUsersRoles')}</div>
                                 </div>
                             </div>
                             <Icon icon="solar:alt-arrow-right-linear" />
@@ -141,8 +141,8 @@ export default function ProfilePage() {
                                     <Icon icon="solar:widget-linear" width={18} />
                                 </div>
                                 <div className="text-left">
-                                    <div className="font-bold text-sm">Organizer Tools</div>
-                                    <div className="text-[10px] text-white/80">Manage your events/stalls</div>
+                                    <div className="font-bold text-sm">{t('profile.organizerTools')}</div>
+                                    <div className="text-[10px] text-white/80">{t('profile.manageYourEventsStalls')}</div>
                                 </div>
                             </div>
                             <Icon icon="solar:alt-arrow-right-linear" />
@@ -152,9 +152,9 @@ export default function ProfilePage() {
                     {/* Request Role */}
                     {isLoggedIn && !profile?.roles?.includes('super_admin') && !profile?.role_request && (
                         <div className="w-full p-4 bg-card rounded-xl border border-border shadow-sm text-left space-y-3">
-                            <h3 className="font-semibold text-card-foreground text-sm">Request Roles</h3>
+                            <h3 className="font-semibold text-card-foreground text-sm">{t('profile.requestRoles')}</h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Want to host events or manage a stall? Request a role below.
+                                {t('profile.requestRolesDesc')}
                             </p>
                             <div className="grid grid-cols-2 gap-2">
                                 <button
@@ -162,21 +162,21 @@ export default function ProfilePage() {
                                     className="p-3 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 border border-blue-100 dark:border-blue-500/20 rounded-lg text-blue-700 dark:text-blue-400 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
                                 >
                                     <Icon icon="solar:calendar-add-linear" width={20} />
-                                    Event Manager
+                                    {t('profile.roleEventManager')}
                                 </button>
                                 <button
                                     onClick={() => useAuthStore.getState().requestRole('stall_manager')}
                                     className="p-3 bg-orange-50 hover:bg-orange-100 dark:bg-orange-500/10 dark:hover:bg-orange-500/20 border border-orange-100 dark:border-orange-500/20 rounded-lg text-orange-700 dark:text-orange-400 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
                                 >
                                     <Icon icon="solar:shop-2-linear" width={20} />
-                                    Stall Manager
+                                    {t('profile.roleStallManager')}
                                 </button>
                             </div>
                             <button
                                 onClick={() => useAuthStore.getState().requestRole('team_member')}
                                 className="w-full text-xs text-gray-400 hover:text-foreground font-medium py-1"
                             >
-                                I'm just a Team Member
+                                {t('profile.roleTeamMemberNote')}
                             </button>
                         </div>
                     )}
@@ -189,7 +189,7 @@ export default function ProfilePage() {
                                     <Icon icon="solar:clock-circle-linear" width={18} />
                                 </div>
                                 <div className="text-left">
-                                    <span className="font-semibold text-sm block">Request Pending</span>
+                                    <span className="font-semibold text-sm block">{t('profile.requestPending')}</span>
                                     <span className="text-xs opacity-80 uppercase font-bold tracking-wider">{profile.role_request.replace('_', ' ')}</span>
                                 </div>
                             </div>
@@ -197,7 +197,7 @@ export default function ProfilePage() {
                                 onClick={() => useAuthStore.getState().cancelRoleRequest()}
                                 className="text-xs font-semibold hover:text-red-500 underline decoration-yellow-600/30 dark:decoration-yellow-500/30 hover:decoration-red-500/30 transition-colors"
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </button>
                         </div>
                     )}
@@ -254,7 +254,7 @@ export default function ProfilePage() {
                             className="mt-8 w-full p-4 bg-red-500/10 hover:bg-red-500/20 rounded-xl border border-red-500/20 flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] disabled:opacity-60"
                         >
                             <Icon icon="solar:logout-2-linear" width={18} className="text-red-500" />
-                            <span className="text-sm font-semibold text-red-500">{t('profile.signOut')}</span>
+                                <span className="text-sm font-semibold text-red-500">{t('profile.signOut')}</span>
                         </button>
 
                         {/* Delete Account */}
@@ -263,34 +263,34 @@ export default function ProfilePage() {
                                 onClick={() => setShowDeleteConfirm(true)}
                                 className="mt-3 w-full py-2 text-xs font-medium text-gray-400 hover:text-red-400 transition-colors"
                             >
-                                Delete my account
+                                {t('profile.deleteAccount')}
                             </button>
                         ) : (
                             <div className="mt-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
                                 <p className="text-sm text-red-600 dark:text-red-400 font-medium mb-3">
-                                    Are you sure? Your profile and data will be deactivated.
+                                    {t('profile.deleteConfirmText')}
                                 </p>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={async () => {
                                             try {
                                                 await deleteAccount()
-                                                toast.success('Account deleted')
+                                                toast.success(t('auth.accountDeleted'))
                                                 navigate('/', { replace: true })
                                             } catch {
-                                                toast.error('Failed to delete account')
+                                                toast.error(t('auth.accountDeleteFailed'))
                                             }
                                         }}
                                         disabled={isLoading}
                                         className="flex-1 py-2.5 bg-red-500 text-white rounded-lg text-sm font-semibold disabled:opacity-60"
                                     >
-                                        {isLoading ? 'Deleting...' : 'Yes, delete'}
+                                        {isLoading ? t('profile.deleting') : t('profile.confirmDeleteYes')}
                                     </button>
                                     <button
                                         onClick={() => setShowDeleteConfirm(false)}
                                         className="flex-1 py-2.5 bg-card text-gray-600 dark:text-gray-300 rounded-lg text-sm font-semibold border border-border"
                                     >
-                                        Cancel
+                                        {t('common.cancel')}
                                     </button>
                                 </div>
                             </div>

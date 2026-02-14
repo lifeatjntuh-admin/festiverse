@@ -18,6 +18,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 function TeamList({ event }: { event: Event }) {
+    const { t } = useTranslation()
     const { members, loading } = useEventTeam(event.id)
 
     if (loading) return <div className="animate-pulse h-24 bg-muted rounded-xl mb-6 mx-4" />
@@ -27,11 +28,11 @@ function TeamList({ event }: { event: Event }) {
         .filter(m => m.user_id !== event.organizer_id && m.profile)
         .map(m => ({
             ...m.profile!,
-            role_label: m.role === 'co_host' ? 'Co-Organizer' : 'Member'
+            role_label: m.role === 'co_host' ? t('event.roleCoOrganizer') : t('event.roleMember')
         }))
 
     const team = [
-        ...(event.organizer ? [{ ...event.organizer, role_label: 'Organizer' }] : []),
+        ...(event.organizer ? [{ ...event.organizer, role_label: t('event.roleOrganizer') }] : []),
         ...teamMembers
     ]
 
@@ -86,14 +87,14 @@ export default function EventDetailPage() {
 
     const handleBookmark = async () => {
         if (!user) {
-            toast('Please sign in to bookmark', { icon: '🔒' })
+            toast(t('stalls.pleaseSignIn') || 'Please sign in to bookmark', { icon: '🔒' })
             return
         }
         if (!event || bookmarking) return
 
         setBookmarking(true)
         const nowBookmarked = await toggleBookmark(event.id)
-        toast.success(nowBookmarked ? 'Bookmarked! ⭐' : 'Removed from bookmarks')
+        toast.success(nowBookmarked ? t('event.bookmarked') : t('event.removedBookmark'))
         setBookmarking(false)
     }
 
@@ -109,13 +110,13 @@ export default function EventDetailPage() {
                 await navigator.share(shareData)
             } else {
                 await navigator.clipboard.writeText(window.location.href)
-                toast.success('Link copied to clipboard!')
+                toast.success(t('event.linkCopied'))
             }
         } catch (err) {
             // User cancelled share or error
             if ((err as Error).name !== 'AbortError') {
                 await navigator.clipboard.writeText(window.location.href)
-                toast.success('Link copied to clipboard!')
+                toast.success(t('event.linkCopied'))
             }
         }
     }
@@ -140,10 +141,10 @@ export default function EventDetailPage() {
         return (
             <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
                 <Icon icon="solar:calendar-search-linear" width={48} className="text-gray-400 mb-3" />
-                <h1 className="text-xl font-bold text-foreground mb-2">Event Not Found</h1>
-                <p className="text-sm text-gray-500 mb-4">This event may have been removed or doesn't exist.</p>
+                <h1 className="text-xl font-bold text-foreground mb-2">{t('event.notFoundTitle')}</h1>
+                <p className="text-sm text-gray-500 mb-4">{t('event.notFoundDesc')}</p>
                 <Link to="/" className="text-sm font-semibold text-primary-600 hover:text-primary-700">
-                    ← Back to Home
+                    {t('event.backToHome')}
                 </Link>
             </div>
         )
@@ -174,12 +175,12 @@ export default function EventDetailPage() {
                 {user?.uid === event.organizer_id && (
                     <div className="absolute top-4 right-4 px-3 py-1.5 bg-black/40 backdrop-blur-md border border-white/20 rounded-full flex items-center gap-2">
                         <Icon icon="solar:crown-star-bold" className="text-amber-400" width={16} />
-                        <span className="text-xs font-semibold text-white">You are the Organizer</span>
+                        <span className="text-xs font-semibold text-white">{t('event.youAreOrganizer')}</span>
                     </div>
                 )}
                 <div className="absolute bottom-4 left-4 right-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${CATEGORY_COLORS[event.category] || 'bg-white/20 text-white'}`}>
-                        {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
+                        {t(`categories.${event.category}`, { defaultValue: event.category.charAt(0).toUpperCase() + event.category.slice(1) })}
                     </span>
                     <h1 className="text-2xl font-bold text-white font-display mt-2 drop-shadow-sm">
                         {event.title}
@@ -192,15 +193,15 @@ export default function EventDetailPage() {
                 {event.registration_required ? (
                     <button
                         onClick={() => {
-                            if (!user) {
-                                toast('Please sign in to register', { icon: '🔒' })
-                                return
-                            }
-                            if (event.registration_link) {
-                                window.open(event.registration_link, '_blank')
-                            } else {
-                                toast.success('Registration coming soon! 🎉')
-                            }
+                                if (!user) {
+                                    toast(t('stalls.pleaseSignIn') || 'Please sign in to register', { icon: '🔒' })
+                                    return
+                                }
+                                if (event.registration_link) {
+                                    window.open(event.registration_link, '_blank')
+                                } else {
+                                    toast.success(t('event.registrationComingSoon'))
+                                }
                         }}
                         className="flex-1 py-3 bg-primary-600 text-white rounded-xl font-semibold text-sm shadow-glow press-effect"
                     >
@@ -268,7 +269,7 @@ export default function EventDetailPage() {
                             return
                         }
                         const nowRegistered = await toggleRegistration()
-                        toast.success(nowRegistered ? 'Marked as registered! ✅' : 'Registration removed')
+                        toast.success(nowRegistered ? t('event.registeredYou') : t('event.registrationRemoved'))
                     }}
                     disabled={regToggling}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all press-effect ${isRegistered
@@ -316,7 +317,7 @@ export default function EventDetailPage() {
 
             {/* Description */}
             <div className="px-4 mt-6">
-                <h3 className="text-sm font-semibold text-foreground mb-2">About</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-2">{t('event.about')}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                     {event.description}
                 </p>
@@ -327,7 +328,7 @@ export default function EventDetailPage() {
             {/* Rules */}
             {event.rules && (
                 <div className="px-4 mt-5">
-                    <h3 className="text-sm font-semibold text-foreground mb-2">Rules & Instructions</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-2">{t('event.rulesTitle')}</h3>
                     <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
                         <p className="text-sm text-amber-600 dark:text-amber-400 leading-relaxed">{event.rules}</p>
                     </div>
@@ -337,14 +338,14 @@ export default function EventDetailPage() {
             {/* Venue Details */}
             {capacity && (
                 <div className="px-4 mt-5">
-                    <h3 className="text-sm font-semibold text-foreground mb-2">Venue</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-2">{t('event.venueLabel')}</h3>
                     <div className="bg-card rounded-xl p-4 shadow-sm border border-border flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                             <Icon icon="solar:buildings-2-linear" width={20} />
                         </div>
                         <div>
                             <div className="text-sm font-semibold text-card-foreground">{event.location}</div>
-                            <div className="text-xs text-muted-foreground">Capacity: {capacity} people</div>
+                            <div className="text-xs text-muted-foreground">{t('event.capacity', { count: capacity })}</div>
                         </div>
                     </div>
                 </div>
