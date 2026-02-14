@@ -179,6 +179,7 @@
     "common": {
         "loading": "Loading...",
         "error": "Something went wrong",
+        "add": "Add",
         "showAll": "Show All",
         "unknown": "Unknown",
         "retry": "Try Again",
@@ -189,7 +190,11 @@
         "create": "Create",
         "back": "Back",
         "close": "Close",
-        "confirm": "Confirm"
+        "confirm": "Confirm",
+        "areYouSure": "Are you sure?",
+        "saveChanges": "Save Changes",
+        "you": "(You)",
+        "youBrackets": "(You)"
     },
     "organiser": {
         "unauthorized": "Unauthorized",
@@ -250,7 +255,13 @@
         "organizerOwner": "Organizer (Owner)",
         "removeMember": "Remove member",
         "added": "Added",
-        "coOrgShortBadge": "Co-Org"
+        "coOrgShortBadge": "Co-Org",
+        "coHostShortBadge": "Co-Host",
+        "leaveTeam": "Leave Team",
+        "confirmLeaveTeam": "Are you sure you want to leave this team? You will lose access to team management features.",
+        "leave": "Leave",
+        "failedToLeave": "Failed to leave team",
+        "leftTeamSuccess": "You have left the team"
     },
     "stallForm": {
         "editing": "Editing Stall",
@@ -342,7 +353,14 @@
         "manageRoles": "Manage Roles",
         "confirmManageRole": "Are you sure you want to {{action}} {{role}} for this user?",
         "confirmApproveRequest": "Approve this role request?",
-        "tapToToggleRoles": "Tap to toggle roles. Changes are saved immediately."
+        "tapToToggleRoles": "Tap to toggle roles. Changes are saved immediately.",
+        "festDates": "Fest Dates",
+        "day1": "Day 1",
+        "day2": "Day 2",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "updateFailed": "Failed to update dates",
+        "datesUpdated": "Fest dates updated!"
     },
     "notFound": {
         "title": "Lost at the Fest?",

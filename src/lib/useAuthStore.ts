@@ -196,68 +196,78 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 }))
 
 // Helper: Sync Profile logic
-async function syncProfile(firebaseUser: User): Promise<void> {
+async function syncProfile(firebaseUser: User, retries = 3): Promise<void> {
     const { uid, email, displayName, photoURL } = firebaseUser
 
-    // 1. Check if profile exists
-    const { data: existingProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('id, is_deleted, roles')
-        .eq('id', uid)
-        .maybeSingle()
+    for (let i = 0; i < retries; i++) {
+        try {
+            // 1. Check if profile exists
+            const { data: existingProfile, error: fetchError } = await supabase
+                .from('profiles')
+                .select('id, is_deleted, roles')
+                .eq('id', uid)
+                .maybeSingle()
 
-    if (fetchError) {
-        throw fetchError
-    }
+            if (fetchError) throw fetchError
 
-    // 2. Reactivate if soft-deleted
-    if (existingProfile?.is_deleted) {
-        // Determine Roles (Bootstrapping) - Keep existing roles or default? 
-        // If reactivating, we probably keep existing roles unless logic dictates otherwise.
-        // Let's just reactivate.
-        await supabase.from('profiles').update({
-            is_deleted: false,
-            deleted_at: null
-        }).eq('id', uid)
-        toast.success('Welcome back! Your account has been reactivated.')
-    }
+            // 2. Reactivate if soft-deleted
+            if (existingProfile?.is_deleted) {
+                await supabase.from('profiles').update({
+                    is_deleted: false,
+                    deleted_at: null
+                }).eq('id', uid)
+                toast.success('Welcome back! Your account has been reactivated.')
+            }
 
-    // 3. Determine Roles (Bootstrapping for new users or migration)
-    let roles: UserRole[] = ['attendee']
-    if (existingProfile?.roles && existingProfile.roles.length > 0) {
-        roles = existingProfile.roles as UserRole[]
-    } else {
-        // Check if any Super Admin exists
-        const { count, error: countError } = await supabase
-            .from('profiles')
-            .select('*', { count: 'exact', head: true })
-            .contains('roles', ['super_admin'])
+            // 3. Determine Roles
+            let roles: UserRole[] = ['attendee']
+            if (existingProfile?.roles && existingProfile.roles.length > 0) {
+                roles = existingProfile.roles as UserRole[]
+            } else {
+                // Check if any Super Admin exists
+                const { count, error: countError } = await supabase
+                    .from('profiles')
+                    .select('*', { count: 'exact', head: true })
+                    .contains('roles', ['super_admin'])
 
-        if (!countError && count === 0) {
-            roles = ['super_admin', 'attendee']
-            console.log('🎉 First user detected! Promoting to Super Admin.')
+                if (!countError && count === 0) {
+                    roles = ['super_admin', 'attendee']
+                    console.log('🎉 First user detected! Promoting to Super Admin.')
+                }
+            }
+
+            const payload = {
+                email: email || '',
+                name: displayName || email?.split('@')[0] || 'User',
+                avatar_url: photoURL || null,
+                is_deleted: false,
+                deleted_at: null,
+                roles: roles,
+            }
+
+            // Upsert profile
+            const { error: upsertError } = await supabase
+                .from('profiles')
+                .upsert({ id: uid, ...payload, updated_at: new Date().toISOString() })
+
+            if (upsertError) throw upsertError
+
+            if (!existingProfile && roles.includes('super_admin')) {
+                toast('You are the first user! You are now Super Admin 👑', { duration: 6000 })
+            }
+
+            return // Success
+        } catch (err: any) {
+            // Don't retry if request was aborted
+            if (err?.name === 'AbortError' || err?.message?.includes('AbortError')) {
+                throw err
+            }
+
+            console.warn(`Sync attempt ${i + 1} failed:`, err)
+            if (i === retries - 1) throw err // Throw on last attempt
+            // Wait before retry (exponential backoff: 500, 1000, 2000)
+            await new Promise(r => setTimeout(r, 500 * Math.pow(2, i)))
         }
-    }
-
-    const payload = {
-        email: email || '',
-        name: displayName || email?.split('@')[0] || 'User',
-        avatar_url: photoURL || null,
-        is_deleted: false,
-        deleted_at: null,
-        roles: roles,
-        // permissions: {}, // let's not overwrite permissions if we don't have to, or default to {}
-    }
-
-    // Upsert profile
-    const { error: upsertError } = await supabase
-        .from('profiles')
-        .upsert({ id: uid, ...payload, updated_at: new Date().toISOString() })
-
-    if (upsertError) throw upsertError
-
-    if (!existingProfile && roles.includes('super_admin')) {
-        toast('You are the first user! You are now Super Admin 👑', { duration: 6000 })
     }
 }
 
@@ -266,6 +276,8 @@ onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
         try {
             await syncProfile(firebaseUser)
+
+
 
             // Fetch full profile
             const { data: profile, error } = await supabase
@@ -282,10 +294,25 @@ onAuthStateChanged(auth, async (firebaseUser) => {
                 isLoading: false,
                 initialized: true
             })
-        } catch (error) {
+        } catch (error: any) {
+            const isAbort = error?.name === 'AbortError' ||
+                error?.message?.includes('AbortError') ||
+                error?.message?.includes('signal is aborted without reason')
+
+            if (isAbort) {
+                console.warn('Profile sync aborted (likely due to page navigation or duplicate request). Ignoring.')
+                return
+            }
+
             console.error('Profile sync failed:', error)
-            toast.error('Failed to load profile')
-            // Sign out if sync fails to prevent inconsistent state
+            if (error?.message) console.error('Error message:', error.message)
+            if (error?.details) console.error('Error details:', error.details)
+            if (error?.hint) console.error('Error hint:', error.hint)
+
+            toast.error(`Failed to load profile: ${error?.message || 'Unknown error'}`)
+
+            // Sign out if sync fails (unless it's a transient network error that we already retried)
+            // But if we are here, retries failed.
             await firebaseSignOut(auth)
             useAuthStore.setState({ user: null, profile: null, isLoading: false, initialized: true })
         }

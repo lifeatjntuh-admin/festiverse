@@ -1,6 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from './supabase'
-import type { Event, Stall, Bookmark, EventRegistration, Profile, UserRole } from '@/types/database'
+import type { Event, Stall, Bookmark, EventRegistration, Profile, UserRole, FestDates } from '@/types/database'
+
+const DEFAULT_FEST_DATES: FestDates = {
+    day1: { start: '2026-03-15T00:00:00+05:30', end: '2026-03-15T23:59:59+05:30' },
+    day2: { start: '2026-03-16T00:00:00+05:30', end: '2026-03-16T23:59:59+05:30' },
+}
 
 // ===== Events Hooks =====
 
@@ -37,34 +42,44 @@ export function useEventsByDay(day: 'day1' | 'day2') {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    // Fest days: Day 1 = March 15, Day 2 = March 16
-    const dateMap = {
-        day1: { start: '2026-03-15T00:00:00+05:30', end: '2026-03-15T23:59:59+05:30' },
-        day2: { start: '2026-03-16T00:00:00+05:30', end: '2026-03-16T23:59:59+05:30' },
-    }
-
     useEffect(() => {
         setLoading(true)
         setError(null)
-        const { start, end } = dateMap[day]
 
-        supabase
-            .from('events')
-            .select('*, bookmarks(count), event_registrations(count)')
-            .eq('is_published', true)
-            .gte('start_time', start)
-            .lte('start_time', end)
-            .order('start_time', { ascending: true })
-            .then(({ data, error: err }) => {
-                if (err) {
-                    console.error('Failed to fetch events by day:', err)
-                    setError(err.message)
-                } else {
-                    setEvents((data ?? []) as Event[])
-                }
-                setLoading(false)
-            })
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        const fetchDatesAndEvents = async () => {
+            // 1. Get dates
+            let dateMap = DEFAULT_FEST_DATES
+            const { data: settings } = await supabase
+                .from('app_settings')
+                .select('value')
+                .eq('key', 'fest_dates')
+                .single()
+
+            if (settings?.value) {
+                dateMap = settings.value as FestDates
+            }
+
+            const { start, end } = dateMap[day]
+
+            // 2. Get events
+            const { data, error: err } = await supabase
+                .from('events')
+                .select('*, bookmarks(count), event_registrations(count)')
+                .eq('is_published', true)
+                .gte('start_time', start)
+                .lte('start_time', end)
+                .order('start_time', { ascending: true })
+
+            if (err) {
+                console.error('Failed to fetch events by day:', err)
+                setError(err.message)
+            } else {
+                setEvents((data ?? []) as Event[])
+            }
+            setLoading(false)
+        }
+
+        fetchDatesAndEvents()
     }, [day])
 
     return { events, loading, error }
@@ -451,7 +466,7 @@ export function useMyEvents(userId: string | undefined, roles: UserRole[] = []) 
             if (isSuperAdmin) {
                 // Admin: Fetch ALL events + My Team Roles
                 const [allEventsRes, teamRes] = await Promise.all([
-                    supabase.from('events').select('*').order('start_time', { ascending: true }),
+                    supabase.from('events').select('*, organizer:organizer_id(*)').order('start_time', { ascending: true }),
                     supabase.from('event_team_members').select('event_id, role').eq('user_id', userId)
                 ])
 
@@ -470,8 +485,8 @@ export function useMyEvents(userId: string | undefined, roles: UserRole[] = []) 
             } else {
                 // Normal: Fetch Owned + Team
                 const [ownedRes, teamRes] = await Promise.all([
-                    supabase.from('events').select('*').eq('organizer_id', userId),
-                    supabase.from('event_team_members').select('event_id, role, events(*)').eq('user_id', userId)
+                    supabase.from('events').select('*, organizer:organizer_id(*)').eq('organizer_id', userId),
+                    supabase.from('event_team_members').select('event_id, role, events(*, organizer:organizer_id(*))').eq('user_id', userId)
                 ])
 
                 const owned = (ownedRes.data ?? []).map((e: any) => ({ ...e, user_relation: 'owner' })) as Event[]
@@ -527,7 +542,7 @@ export function useMyStalls(userId: string | undefined, roles: UserRole[] = []) 
             if (isSuperAdmin) {
                 // Admin: Fetch ALL stalls + My Team Roles
                 const [allStallsRes, teamRes] = await Promise.all([
-                    supabase.from('stalls').select('*, bookmarks(count)').order('created_at', { ascending: false }),
+                    supabase.from('stalls').select('*, owner:owner_id(*), bookmarks(count)').order('created_at', { ascending: false }),
                     supabase.from('stall_team_members').select('stall_id, role').eq('user_id', userId)
                 ])
 
@@ -546,8 +561,8 @@ export function useMyStalls(userId: string | undefined, roles: UserRole[] = []) 
             } else {
                 // Normal: Fetch Owned + Team
                 const [ownedRes, teamRes] = await Promise.all([
-                    supabase.from('stalls').select('*, bookmarks(count)').eq('owner_id', userId),
-                    supabase.from('stall_team_members').select('stall_id, role, stalls(*, bookmarks(count))').eq('user_id', userId)
+                    supabase.from('stalls').select('*, owner:owner_id(*), bookmarks(count)').eq('owner_id', userId),
+                    supabase.from('stall_team_members').select('stall_id, role, stalls(*, owner:owner_id(*), bookmarks(count))').eq('user_id', userId)
                 ])
 
                 const owned = (ownedRes.data ?? []).map((s: any) => ({ ...s, user_relation: 'owner' })) as Stall[]
@@ -710,6 +725,11 @@ export function useEventTeam(eventId: string | undefined) {
     useEffect(() => { refresh() }, [refresh])
 
     const addMember = async (userId: string, role: 'co_host' | 'member' = 'member') => {
+        // Check if already a member locally (to avoid RPC call)
+        if (members.some(m => m.user_id === userId)) {
+            return { error: { message: 'User is already a member of this team' } }
+        }
+
         const executorId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
 
         if (!executorId || !eventId) return { error: { message: 'Not authenticated or invalid event' } }
@@ -720,8 +740,17 @@ export function useEventTeam(eventId: string | undefined) {
             target_user_id: userId,
             target_role: role
         })
-        if (!error) refresh()
-        return { error }
+
+        if (error) {
+            // Handle unique constraint violation (duplicate member)
+            if (error.code === '23505') {
+                return { error: { message: 'User is already a member of this team' } }
+            }
+            return { error }
+        }
+
+        refresh()
+        return { error: null }
     }
 
     const removeMember = async (userId: string) => {
@@ -738,7 +767,20 @@ export function useEventTeam(eventId: string | undefined) {
         return { error }
     }
 
-    return { members, loading, refresh, addMember, removeMember }
+    const leaveTeam = async () => {
+        const userId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
+        if (!userId || !eventId) return { error: { message: 'Not authenticated or invalid event' } }
+
+        const { error } = await supabase.rpc('leave_event_team', {
+            target_event_id: eventId,
+            target_user_id: userId
+        })
+
+        // Refresh valid events/stalls lists might be needed in UI, but here we just return
+        return { error }
+    }
+
+    return { members, loading, refresh, addMember, removeMember, leaveTeam }
 }
 
 /** Fetch team members for a stall */
@@ -748,27 +790,41 @@ export function useStallTeam(stallId: string | undefined) {
     const [members, setMembers] = useState<StallTeamMember[]>([])
     const [loading, setLoading] = useState(true)
 
-    const refresh = useCallback(() => {
+    const refresh = useCallback(async () => {
         if (!stallId) { setLoading(false); return }
         setLoading(true)
-        supabase
-            .from('stall_team_members')
-            .select('*, profile:user_id(*)')
-            .eq('stall_id', stallId)
-            .then(({ data, error }) => {
-                if (error) {
-                    console.warn('stall_team_members query failed:', error.message)
-                    setMembers([])
-                } else {
-                    setMembers((data ?? []) as StallTeamMember[])
-                }
-                setLoading(false)
+
+        const executorId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
+
+        if (!executorId) {
+            setLoading(false)
+            return
+        }
+
+        const { data, error } = await supabase
+            .rpc('get_stall_team_members', {
+                executor_id: executorId,
+                target_stall_id: stallId
             })
+            .select('*, profile:user_id(*)')
+
+        if (error) {
+            console.warn('stall_team_members query failed:', error.message)
+            setMembers([])
+        } else {
+            setMembers((data ?? []) as StallTeamMember[])
+        }
+        setLoading(false)
     }, [stallId])
 
     useEffect(() => { refresh() }, [refresh])
 
     const addMember = async (userId: string, role: 'co_host' | 'member' = 'member') => {
+        // Check if already a member locally (to avoid RPC call)
+        if (members.some(m => m.user_id === userId)) {
+            return { error: { message: 'User is already a member of this team' } }
+        }
+
         const executorId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
 
         if (!executorId || !stallId) return { error: { message: 'Not authenticated or invalid stall' } }
@@ -779,8 +835,17 @@ export function useStallTeam(stallId: string | undefined) {
             target_user_id: userId,
             target_role: role
         })
-        if (!error) refresh()
-        return { error }
+
+        if (error) {
+            // Handle unique constraint violation (duplicate member)
+            if (error.code === '23505') {
+                return { error: { message: 'User is already a member of this team' } }
+            }
+            return { error }
+        }
+
+        refresh()
+        return { error: null }
     }
 
     const removeMember = async (userId: string) => {
@@ -797,5 +862,54 @@ export function useStallTeam(stallId: string | undefined) {
         return { error }
     }
 
-    return { members, loading, refresh, addMember, removeMember }
+    const leaveTeam = async () => {
+        const userId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
+        if (!userId || !stallId) return { error: { message: 'Not authenticated or invalid stall' } }
+
+        const { error } = await supabase.rpc('leave_stall_team', {
+            target_stall_id: stallId,
+            target_user_id: userId
+        })
+        return { error }
+    }
+
+    return { members, loading, refresh, addMember, removeMember, leaveTeam }
 }
+
+// ===== App Settings =====
+
+export function useFestDates() {
+    const [dates, setDates] = useState<FestDates | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    const refresh = useCallback(async () => {
+        setLoading(true)
+        const { data } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'fest_dates')
+            .single()
+
+        if (data?.value) {
+            setDates(data.value as FestDates)
+        } else {
+            setDates(DEFAULT_FEST_DATES)
+        }
+        setLoading(false)
+    }, [])
+
+    useEffect(() => { refresh() }, [refresh])
+
+    return { dates, loading, refresh }
+}
+
+export async function updateFestDates(dates: FestDates) {
+    const executorId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
+    if (!executorId) return { error: { message: 'Not authenticated' } }
+
+    return supabase.rpc('update_fest_dates', {
+        executor_id: executorId,
+        new_dates: dates
+    })
+}
+

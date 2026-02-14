@@ -11,8 +11,10 @@ import {
     toggleStallActive,
 } from '@/lib/useData'
 import { useFormStore } from '@/lib/useFormStore'
+
 import type { Event, Stall } from '@/types/database'
 import toast from 'react-hot-toast'
+
 import { format } from 'date-fns'
 import { StallHeartsList } from '@/components/organiser/StallHeartsList'
 
@@ -152,6 +154,8 @@ export default function OrganiserTools() {
 
 
 
+
+
     return (
         <div className="bg-background pb-24 animate-fade-in">
             {/* Header */}
@@ -234,10 +238,7 @@ export default function OrganiserTools() {
                                                         {event.is_published ? t('organiser.live') : t('organiser.draft')}
                                                     </span>
                                                     {['owner', 'co_host', 'member'].includes(event.user_relation || '') && (
-                                                        <span className={`flex-shrink-0 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${event.user_relation === 'owner' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' :
-                                                            event.user_relation === 'co_host' ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400' :
-                                                                'bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400'
-                                                            }`}>
+                                                        <span className="flex-shrink-0 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-muted dark:text-muted-foreground">
                                                             {event.user_relation?.replace('_', ' ')}
                                                         </span>
                                                     )}
@@ -252,7 +253,7 @@ export default function OrganiserTools() {
                                                 <span className="flex items-center gap-1"><Icon icon="solar:calendar-linear" width={12} />{format(new Date(event.start_time), 'MMM d, h:mm a')}</span>
                                                 <span className="flex items-center gap-1"><Icon icon="solar:map-point-linear" width={12} />{event.location}</span>
                                             </div>
-                                                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground/80">
+                                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground/80">
                                                 <span className="flex items-center gap-1">
                                                     <Icon icon="solar:users-group-rounded-linear" width={12} />
                                                     {event.current_registrations}{event.max_participants ? `/${event.max_participants}` : ''} {t('organiser.registrationsLabel')}
@@ -281,6 +282,8 @@ export default function OrganiserTools() {
                                             <Icon icon="solar:users-group-rounded-linear" width={14} />
                                             {expandedEvent === event.id ? t('organiser.hide') : t('organiser.registrationsLabel')}
                                         </button>
+
+
                                     </div>
                                 </div>
                                 {expandedEvent === event.id && (
@@ -332,10 +335,7 @@ export default function OrganiserTools() {
                                                         {stall.is_active ? t('organiser.active') : t('organiser.inactive')}
                                                     </span>
                                                     {['owner', 'co_host', 'member'].includes(stall.user_relation || '') && (
-                                                        <span className={`flex-shrink-0 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${stall.user_relation === 'owner' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
-                                                            stall.user_relation === 'co_host' ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400' :
-                                                                'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
-                                                            }`}>
+                                                        <span className="flex-shrink-0 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-muted dark:text-muted-foreground">
                                                             {stall.user_relation?.replace('_', ' ')}
                                                         </span>
                                                     )}
@@ -378,6 +378,8 @@ export default function OrganiserTools() {
                                             <Icon icon="solar:heart-linear" width={14} />
                                             {expandedStall === stall.id ? t('organiser.hide') : t('organiser.hearts')}
                                         </button>
+
+
                                     </div>
                                 </div>
                                 {expandedStall === stall.id && (
@@ -390,6 +392,6 @@ export default function OrganiserTools() {
                     </>
                 )}
             </div>
-        </div >
+        </div>
     )
 }

@@ -42,7 +42,7 @@ function App() {
 
     return (
         <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <Toaster
                     position="top-center"
                     toastOptions={{

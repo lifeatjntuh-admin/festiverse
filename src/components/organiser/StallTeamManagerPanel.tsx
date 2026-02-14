@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react'
 import { useTranslation } from 'react-i18next'
 import { useStallTeam, useSearchProfiles } from '@/lib/useData'
 import { useFormStore } from '@/lib/useFormStore'
+import { useAuthStore } from '@/lib/useAuthStore'
 import { Stall } from '@/types/database'
 import toast from 'react-hot-toast'
 
@@ -16,11 +17,11 @@ interface StallTeamManagerPanelProps {
 
 export default function StallTeamManagerPanel({ formId, stall, minimized, pillIndex }: StallTeamManagerPanelProps) {
     const { closeForm, toggleMinimize } = useFormStore()
+    const { user } = useAuthStore()
     const { t } = useTranslation()
-    const { members, loading, addMember, removeMember } = useStallTeam(stall.id)
+    const { members, loading, addMember, removeMember, leaveTeam } = useStallTeam(stall.id)
     const [searchQuery, setSearchQuery] = useState('')
     const { profiles: searchResults, loading: searchLoading } = useSearchProfiles(searchQuery)
-    const [targetRole, setTargetRole] = useState<'member' | 'co_host'>('member')
     const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
@@ -32,14 +33,14 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
     const onClose = () => closeForm(formId)
     const onToggleMinimize = () => toggleMinimize(formId)
 
-    const handleAdd = async (userId: string) => {
-        const { error } = await addMember(userId, targetRole)
+    const handleAdd = async (userId: string, role: 'member' | 'co_host') => {
+        const { error } = await addMember(userId, role)
         if (error) {
             toast.error(t('organiser.failedToAdd', { msg: error.message }))
             return
         }
         setSearchQuery('')
-        toast.success(t('organiser.teamMemberAddedAs', { role: targetRole === 'co_host' ? t('organiser.coHost') : t('event.roleMember') }))
+        toast.success(t('organiser.teamMemberAddedAs', { role: role === 'co_host' ? t('organiser.coHost') : t('event.roleMember') }))
     }
 
     const handleRemove = async (userId: string) => {
@@ -49,6 +50,17 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
             toast.error(t('organiser.failedToRemove', { msg: error.message }))
         } else {
             toast.success(t('organiser.teamMemberRemoved'))
+        }
+    }
+
+    const handleLeave = async () => {
+        if (!confirm(t('organiser.confirmLeaveTeam'))) return
+        const { error } = await leaveTeam()
+        if (error) {
+            toast.error(t('organiser.failedToLeave'))
+        } else {
+            toast.success(t('organiser.leftTeamSuccess'))
+            onClose()
         }
     }
 
@@ -95,21 +107,7 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
                 {/* Search */}
                 <div className="space-y-3">
                     <label className="text-xs font-bold text-gray-500 dark:text-muted-foreground uppercase flex items-center gap-2">
-                        Add New Member
-                        <div className="ml-auto flex bg-gray-100 dark:bg-muted p-0.5 rounded-lg">
-                            <button
-                                onClick={() => setTargetRole('member')}
-                                className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all ${targetRole === 'member' ? 'bg-white dark:bg-background shadow-sm text-gray-800 dark:text-foreground' : 'text-gray-400 dark:text-muted-foreground hover:text-gray-600 dark:hover:text-gray-300'}`}
-                            >
-                                {t('event.roleMember')}
-                            </button>
-                            <button
-                                onClick={() => setTargetRole('co_host')}
-                                className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all ${targetRole === 'co_host' ? 'bg-white dark:bg-background shadow-sm text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-muted-foreground hover:text-gray-600 dark:hover:text-gray-300'}`}
-                            >
-                                {t('organiser.coHost')}
-                            </button>
-                        </div>
+                        {t('organiser.addNewMember')}
                     </label>
                     <div className="relative z-20">
                         <Icon icon="solar:magnifer-linear" className="absolute left-3 top-2.5 text-gray-400 dark:text-muted-foreground" width={18} />
@@ -131,60 +129,30 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
                                     <div className="p-4 text-center text-xs text-gray-400 dark:text-muted-foreground">{t('organiser.noUsersFound')}</div>
                                 ) : (
                                     <div className="divide-y divide-gray-50 dark:divide-border">
-                                        {searchResults.map(user => {
-                                            const existingMember = members.find(m => m.user_id === user.id)
-                                            const isOwner = stall.owner_id === user.id
-
-                                            return (
-                                                <div key={user.id} className="p-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-muted/50 transition-colors group">
-                                                    <div className="flex items-center gap-3 overflow-hidden">
-                                                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-muted flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-muted-foreground border border-white dark:border-border shadow-sm">
-                                                            {user.avatar_url ? <img src={user.avatar_url} className="w-full h-full rounded-full object-cover" /> : user.name?.[0]}
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <div className="text-sm font-medium text-gray-900 dark:text-foreground truncate">{user.name}</div>
-                                                            <div className="text-xs text-gray-500 dark:text-muted-foreground truncate">{user.email}</div>
-                                                        </div>
-                                                    </div>
-
-                                                    {isOwner ? (
-                                                        <span className="text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">{t('organiser.owner')}</span>
-                                                    ) : existingMember ? (
-                                                        <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
-                                                            {existingMember.role === 'co_host' ? t('organiser.coHostShort') : t('organiser.added')}
-                                                        </span>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => handleAdd(user.id)}
-                                                            className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 bg-primary-50 text-primary-600 rounded-lg text-xs font-bold hover:bg-primary-100 active:scale-95"
-                                                        >
-                                                            {t('common.add')}
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            )
-                                        })}
+                                        {searchResults.map(user => (
+                                            <UserResultItem
+                                                key={user.id}
+                                                user={user}
+                                                existingMember={members.find(m => m.user_id === user.id)}
+                                                isOwner={stall.owner_id === user.id}
+                                                onAdd={handleAdd}
+                                            />
+                                        ))}
                                     </div>
                                 )}
                             </div>
                         )}
                     </div>
-                    {targetRole === 'co_host' && (
-                        <div className="text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-500/10 p-2 rounded-lg border border-amber-100 dark:border-amber-500/20 flex gap-2 items-start">
-                            <Icon icon="solar:info-circle-bold" className="mt-0.5 flex-shrink-0" />
-                            {t('organiser.roleRequirementNote', { role: t('profile.roleStallManager') })}
-                        </div>
-                    )}
                 </div>
 
                 {/* Current Members List */}
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-gray-500 dark:text-muted-foreground uppercase">Current Team ({members.length})</label>
+                        <label className="text-xs font-bold text-gray-500 dark:text-muted-foreground uppercase">{t('organiser.currentTeam', { count: members.length + (stall.owner ? 1 : 0) })}</label>
                         {loading && <Icon icon="solar:spinner-linear" className="animate-spin text-gray-400 dark:text-muted-foreground" width={14} />}
                     </div>
 
-                    {members.length === 0 && !loading ? (
+                    {members.length === 0 && !stall.owner ? (
                         <div className="text-center py-8 bg-gray-50/50 dark:bg-muted/10 rounded-xl border border-dashed border-gray-200 dark:border-border">
                             <Icon icon="solar:users-group-two-rounded-linear" className="mx-auto text-gray-300 dark:text-muted-foreground mb-2" width={32} />
                             <p className="text-xs text-gray-400 dark:text-muted-foreground">{t('organiser.noTeamMembersYet')}</p>
@@ -193,53 +161,139 @@ export default function StallTeamManagerPanel({ formId, stall, minimized, pillIn
                     ) : (
                         <div className="space-y-2">
                             {/* Owner Card (ReadOnly) */}
+                            {/* Owner Card (ReadOnly) */}
                             {stall.owner && (
-                                <div className="flex items-center justify-between p-3 bg-amber-50/30 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-xl">
+                                <div className="flex items-center justify-between p-3 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl shadow-sm">
                                     <div className="flex items-center gap-3 overflow-hidden">
-                                        <div className="w-9 h-9 rounded-full bg-white dark:bg-muted flex-shrink-0 flex items-center justify-center text-sm font-bold text-gray-500 dark:text-muted-foreground border-2 border-amber-200 dark:border-amber-500/30 shadow-sm">
+                                        <div className="w-9 h-9 rounded-full bg-white dark:bg-muted flex-shrink-0 flex items-center justify-center text-sm font-bold text-gray-500 dark:text-muted-foreground border border-white dark:border-border shadow-sm">
                                             {stall.owner.avatar_url ? <img src={stall.owner.avatar_url} className="w-full h-full rounded-full object-cover" /> : stall.owner.name?.[0]}
                                         </div>
                                         <div className="min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <div className="text-sm font-bold text-gray-900 dark:text-foreground truncate">{stall.owner.name}</div>
-                                                <Icon icon="solar:crown-star-bold" className="text-amber-400" width={14} />
+                                            <div className="text-sm font-bold text-gray-900 dark:text-foreground truncate">
+                                                {stall.owner.name} {user?.uid === stall.owner_id && <span className="text-primary-600 dark:text-primary-400 font-normal">{t('common.youBrackets')}</span>}
                                             </div>
-                                            <div className="text-xs text-gray-500 dark:text-muted-foreground truncate">Owner</div>
+                                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-muted-foreground">
+                                                <span className="px-1.5 py-0 rounded text-[10px] font-semibold bg-gray-100 text-gray-600 dark:bg-muted dark:text-muted-foreground">
+                                                    {t('organiser.owner')}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
                             {/* Members */}
-                            {members.filter(m => m.user_id !== stall.owner_id).map(member => (
-                                <div key={member.id} className="flex items-center justify-between p-3 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl shadow-sm hover:border-gray-200 dark:hover:border-gray-700 transition-colors group">
-                                    <div className="flex items-center gap-3 overflow-hidden">
-                                        <div className="w-9 h-9 rounded-full bg-white dark:bg-muted flex-shrink-0 flex items-center justify-center text-sm font-bold text-gray-500 dark:text-muted-foreground border border-white dark:border-border shadow-sm">
-                                            {member.profile?.avatar_url ? <img src={member.profile.avatar_url} className="w-full h-full rounded-full object-cover" /> : member.profile?.name?.[0]}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <div className="text-sm font-bold text-gray-900 dark:text-foreground truncate">{member.profile?.name || 'Unknown'}</div>
-                                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-muted-foreground">
-                                                <span className={`px-1.5 py-0 rounded text-[10px] font-semibold ${member.role === 'co_host' ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400' : 'bg-gray-100 text-gray-600 dark:bg-muted dark:text-muted-foreground'}`}>
-                                                    {member.role === 'co_host' ? 'Co-Host' : 'Member'}
-                                                </span>
+                            {members.filter(m => m.user_id !== stall.owner_id).map(member => {
+                                const isCurrentUser = member.user_id === user?.uid
+                                return (
+                                    <div key={member.id} className="flex items-center justify-between p-3 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl shadow-sm hover:border-gray-200 dark:hover:border-gray-700 transition-colors group">
+                                        <div className="flex items-center gap-3 overflow-hidden">
+                                            <div className="w-9 h-9 rounded-full bg-white dark:bg-muted flex-shrink-0 flex items-center justify-center text-sm font-bold text-gray-500 dark:text-muted-foreground border border-white dark:border-border shadow-sm">
+                                                {member.profile?.avatar_url ? <img src={member.profile.avatar_url} className="w-full h-full rounded-full object-cover" /> : member.profile?.name?.[0]}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="text-sm font-bold text-gray-900 dark:text-foreground truncate">
+                                                    {member.profile?.name || t('common.unknown')} {isCurrentUser && <span className="text-primary-600 dark:text-primary-400 font-normal">{t('common.youBrackets')}</span>}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-muted-foreground">
+                                                    <span className="px-1.5 py-0 rounded text-[10px] font-semibold bg-gray-100 text-gray-600 dark:bg-muted dark:text-muted-foreground">
+                                                        {member.role === 'co_host' ? t('organiser.coHostShortBadge') : t('organiser.member')}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
+                                        {isCurrentUser ? (
+                                            <button
+                                                onClick={handleLeave}
+                                                className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors"
+                                                title={t('organiser.leaveTeam')}
+                                            >
+                                                {t('organiser.leave')}
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleRemove(member.user_id)}
+                                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                title={t('organiser.removeMember')}
+                                            >
+                                                <Icon icon="solar:trash-bin-trash-linear" width={18} />
+                                            </button>
+                                        )}
                                     </div>
-                                    <button
-                                        onClick={() => handleRemove(member.user_id)}
-                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                        title="Remove member"
-                                    >
-                                        <Icon icon="solar:trash-bin-trash-linear" width={18} />
-                                    </button>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     )}
                 </div>
             </div>
         </div>,
         document.body
+    )
+}
+
+function UserResultItem({ user, existingMember, isOwner, onAdd }: { user: any, existingMember: any, isOwner: boolean, onAdd: (id: string, role: any) => void }) {
+    const { t } = useTranslation()
+    const [isConfirming, setIsConfirming] = useState(false)
+
+    // Check if user has stall_manager role
+    const canBeCoHost = user.roles && Array.isArray(user.roles) && (user.roles.includes('stall_manager') || user.roles.includes('app_admin') || user.roles.includes('super_admin'))
+
+    return (
+        <div className="p-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-muted/50 transition-colors group">
+            <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-muted flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-muted-foreground border border-white dark:border-border shadow-sm">
+                    {user.avatar_url ? <img src={user.avatar_url} className="w-full h-full rounded-full object-cover" /> : user.name?.[0]}
+                </div>
+                <div className="min-w-0">
+                    <div className="text-sm font-medium text-gray-900 dark:text-foreground truncate">{user.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-muted-foreground truncate">{user.email}</div>
+                    {/* Debug info if needed, or role badge */}
+                    {canBeCoHost && <span className="text-[9px] px-1 py-0.5 rounded bg-purple-50 text-purple-600 border border-purple-100 mr-2">{t('profile.roleStallManager')}</span>}
+                </div>
+            </div>
+
+            {isOwner ? (
+                <span className="text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">{t('organiser.owner')}</span>
+            ) : existingMember ? (
+                <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
+                    {existingMember.role === 'co_host' ? t('organiser.coHostShortBadge') : t('organiser.added')}
+                </span>
+            ) : isConfirming ? (
+                <div className="flex items-center gap-1 animate-in fade-in slide-in-from-right-4 duration-200">
+                    <button
+                        onClick={() => onAdd(user.id, 'member')}
+                        className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-[10px] font-bold transition-colors"
+                    >
+                        {t('event.roleMember')}
+                    </button>
+                    <button
+                        onClick={() => {
+                            if (canBeCoHost) onAdd(user.id, 'co_host')
+                            else toast.error(t('organiser.roleRequirementNote', { role: t('profile.roleStallManager') }))
+                        }}
+                        className={`px-2 py-1 rounded-md text-[10px] font-bold transition-colors ${canBeCoHost
+                            ? 'bg-purple-100 hover:bg-purple-200 text-purple-700'
+                            : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                            }`}
+                        title={!canBeCoHost ? t('organiser.roleRequirementNote', { role: t('profile.roleStallManager') }) : ''}
+                    >
+                        {t('organiser.coHostShort')}
+                    </button>
+                    <button
+                        onClick={() => setIsConfirming(false)}
+                        className="p-1 hover:bg-gray-100 text-gray-400 rounded-full"
+                    >
+                        <Icon icon="solar:close-circle-linear" width={16} />
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onClick={() => setIsConfirming(true)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 bg-primary-50 text-primary-600 rounded-lg text-xs font-bold hover:bg-primary-100 active:scale-95"
+                >
+                    {t('common.add')}
+                </button>
+            )}
+        </div>
     )
 }

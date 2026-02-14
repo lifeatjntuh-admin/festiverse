@@ -61,7 +61,7 @@ Festiverse is a Progressive Web App designed to enhance the college fest experie
 | **React Router DOM** | 6.21+ | Client-side routing |
 | **TailwindCSS** | 3.4+ | Utility-first styling |
 | **Framer Motion** | 11.0+ | Animations |
-| **Lucide React** | 0.300+ | Icon library |
+| **Iconify Solar** |  | Icon library |
 
 ### Backend & Services
 | Service | Purpose |
@@ -287,6 +287,30 @@ await signOut();
 const user = useAuthStore(state => state.user);
 ```
 
+### 🔐 Authentication Architecture (Important for Developers)
+
+**Current Implementation (RPC Fallback)**
+Due to limitations with Firebase Auth not syncing natively with Supabase Auth (and deployment issues with Edge Functions), we currently use a **Client-Side Auth + RPC** model for restricted actions.
+
+-   **Frontend:** Authenticates with Firebase.
+-   **Backend (Supabase):** RLS policies on tables like `profiles` are permissive (`public` role).
+-   **Admin Actions:** Critical updates (like `app_settings` for Fest Dates) use **Secure RPC Functions** (e.g., `update_fest_dates`).
+    -   These functions are `SECURITY DEFINER`.
+    -   They manually verify that the `executor_id` belongs to an Admin/Super Admin before executing.
+    -   *Trade-off:* We trust the client to send the correct `executor_id`, but signatures are verified by the database role check.
+
+**Future Improvement (Edge Function Auth Sync)**
+The codebase includes an implementation for a more robust **Auth Sync** pattern using Supabase Edge Functions. This was paused due to deployment internal errors but is the recommended long-term solution.
+
+-   **Code location:** `supabase/functions/auth-sync/`
+-   **Mechanism:** Exchanges Firebase ID Token for a custom Supabase JWT.
+-   **Benefit:** Allows using standard RLS policies (e.g., `auth.uid()`) directly.
+-   **To Enable in Future:**
+    1.  Deploy the `auth-sync` function.
+    2.  Set `JWT_SECRET` in Edge Function secrets.
+    3.  Uncomment the sync logic in `src/lib/useAuthStore.ts` (inside `onAuthStateChanged`).
+    4.  Revert `app_settings` RLS policy to check `auth.jwt()`.
+
 ---
 
 ## 📱 PWA Features
@@ -351,7 +375,7 @@ GNU License - see [LICENSE](LICENSE) for details.
 ## 🙏 Acknowledgments
 
 - UI inspiration: Spotify, Instagram, Apple Music
-- Icon library: [Lucide Icons](https://lucide.dev/)
+- Icon library: [Iconify Solar](https://iconify.design/icon-sets/solar/)
 - Fonts: [Inter](https://rsms.me/inter/), [Lexend](https://www.lexend.com/)
 
 ---

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { format } from 'date-fns'
 import { createPortal } from 'react-dom'
 import { Icon } from '@iconify/react'
 import { useTranslation } from 'react-i18next'
@@ -63,8 +64,8 @@ export default function EventForm({ formId, event, onSaved, minimized, pillIndex
         description: event?.description ?? '',
         category: event?.category ?? 'competition',
         department: event?.department ?? '',
-        start_time: event?.start_time ? event.start_time.slice(0, 16) : '',
-        end_time: event?.end_time ? event.end_time.slice(0, 16) : '',
+        start_time: event?.start_time ? format(new Date(event.start_time), "yyyy-MM-dd'T'HH:mm") : '',
+        end_time: event?.end_time ? format(new Date(event.end_time), "yyyy-MM-dd'T'HH:mm") : '',
         location: event?.location ?? '',
         image_url: event?.image_url ?? '',
         registration_required: event?.registration_required ?? true,

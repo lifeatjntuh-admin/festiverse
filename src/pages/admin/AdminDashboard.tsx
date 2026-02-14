@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/useAuthStore'
 import { Profile, UserRole } from '@/types/database'
 import RoleBadge from '@/components/admin/RoleBadge'
+import FestDatesDialog from '@/components/admin/FestDatesDialog'
 import toast from 'react-hot-toast'
 
 export default function AdminDashboard() {
@@ -19,6 +20,7 @@ export default function AdminDashboard() {
     const [searchQuery, setSearchQuery] = useState('')
     const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
     const [editingUser, setEditingUser] = useState<string | null>(null)
+    const [showDatesDialog, setShowDatesDialog] = useState(false)
 
     const stats = {
         totalUsers: users.length,
@@ -129,6 +131,10 @@ export default function AdminDashboard() {
                     <h1 className="text-lg font-bold text-gray-900 dark:text-foreground">{t('admin.title')}</h1>
                     <p className="text-xs text-gray-500 dark:text-muted-foreground">{t('admin.manageUsers')}</p>
                 </div>
+                <button onClick={() => setShowDatesDialog(true)} className="ml-auto flex items-center gap-1 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-bold shadow-sm hover:bg-primary/90 transition-colors">
+                    <Icon icon="solar:calendar-date-bold" />
+                    Fest Dates
+                </button>
             </div>
 
             {/* Content */}
@@ -316,6 +322,7 @@ export default function AdminDashboard() {
                 </div>,
                 document.body
             )}
+            <FestDatesDialog isOpen={showDatesDialog} onClose={() => setShowDatesDialog(false)} />
         </div >
     )
 }

@@ -14,6 +14,7 @@ export default function ProfilePage() {
     const { stats } = useUserStats(user?.uid)
     const { bookmarkCount } = useBookmarks(user?.uid)
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [isRoleRequestOpen, setIsRoleRequestOpen] = useState(false)
 
     const isLoggedIn = !!user
 
@@ -151,33 +152,54 @@ export default function ProfilePage() {
 
                     {/* Request Role */}
                     {isLoggedIn && !profile?.roles?.includes('super_admin') && !profile?.role_request && (
-                        <div className="w-full p-4 bg-card rounded-xl border border-border shadow-sm text-left space-y-3">
-                            <h3 className="font-semibold text-card-foreground text-sm">{t('profile.requestRoles')}</h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {t('profile.requestRolesDesc')}
-                            </p>
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    onClick={() => useAuthStore.getState().requestRole('event_manager')}
-                                    className="p-3 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 border border-blue-100 dark:border-blue-500/20 rounded-lg text-blue-700 dark:text-blue-400 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
-                                >
-                                    <Icon icon="solar:calendar-add-linear" width={20} />
-                                    {t('profile.roleEventManager')}
-                                </button>
-                                <button
-                                    onClick={() => useAuthStore.getState().requestRole('stall_manager')}
-                                    className="p-3 bg-orange-50 hover:bg-orange-100 dark:bg-orange-500/10 dark:hover:bg-orange-500/20 border border-orange-100 dark:border-orange-500/20 rounded-lg text-orange-700 dark:text-orange-400 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
-                                >
-                                    <Icon icon="solar:shop-2-linear" width={20} />
-                                    {t('profile.roleStallManager')}
-                                </button>
-                            </div>
+                        <div className="w-full bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                             <button
-                                onClick={() => useAuthStore.getState().requestRole('team_member')}
-                                className="w-full text-xs text-gray-400 hover:text-foreground font-medium py-1"
+                                onClick={() => setIsRoleRequestOpen(!isRoleRequestOpen)}
+                                className="w-full p-4 flex items-center justify-between text-left hover:bg-muted/50 transition-colors"
                             >
-                                {t('profile.roleTeamMemberNote')}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                        <Icon icon="solar:user-plus-linear" width={18} />
+                                    </div>
+                                    <span className="font-semibold text-sm text-card-foreground">{t('profile.requestRoles')}</span>
+                                </div>
+                                <Icon
+                                    icon="solar:alt-arrow-down-linear"
+                                    className={`text-gray-400 transition-transform duration-200 ${isRoleRequestOpen ? 'rotate-180' : ''}`}
+                                />
                             </button>
+
+                            <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${isRoleRequestOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                                <div className="overflow-hidden">
+                                    <div className="p-4 pt-0 space-y-3">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            {t('profile.requestRolesDesc')}
+                                        </p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                onClick={() => useAuthStore.getState().requestRole('event_manager')}
+                                                className="p-3 bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 border border-blue-100 dark:border-blue-500/20 rounded-lg text-blue-700 dark:text-blue-400 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
+                                            >
+                                                <Icon icon="solar:calendar-add-linear" width={20} />
+                                                {t('profile.roleEventManager')}
+                                            </button>
+                                            <button
+                                                onClick={() => useAuthStore.getState().requestRole('stall_manager')}
+                                                className="p-3 bg-orange-50 hover:bg-orange-100 dark:bg-orange-500/10 dark:hover:bg-orange-500/20 border border-orange-100 dark:border-orange-500/20 rounded-lg text-orange-700 dark:text-orange-400 text-xs font-semibold transition-colors flex flex-col items-center gap-1"
+                                            >
+                                                <Icon icon="solar:shop-2-linear" width={20} />
+                                                {t('profile.roleStallManager')}
+                                            </button>
+                                        </div>
+                                        <button
+                                            onClick={() => useAuthStore.getState().requestRole('team_member')}
+                                            className="w-full text-xs text-gray-400 hover:text-foreground font-medium py-1"
+                                        >
+                                            {t('profile.roleTeamMemberNote')}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -254,7 +276,7 @@ export default function ProfilePage() {
                             className="mt-8 w-full p-4 bg-red-500/10 hover:bg-red-500/20 rounded-xl border border-red-500/20 flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] disabled:opacity-60"
                         >
                             <Icon icon="solar:logout-2-linear" width={18} className="text-red-500" />
-                                <span className="text-sm font-semibold text-red-500">{t('profile.signOut')}</span>
+                            <span className="text-sm font-semibold text-red-500">{t('profile.signOut')}</span>
                         </button>
 
                         {/* Delete Account */}

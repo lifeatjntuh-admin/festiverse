@@ -226,3 +226,15 @@ export interface StallFilters {
     category: StallCategory | 'all'
     search: string
 }
+
+// ===== Settings =====
+export interface AppSettings {
+    key: string
+    value: any
+    description: string | null
+}
+
+export interface FestDates {
+    day1: { start: string; end: string }
+    day2: { start: string; end: string }
+}
