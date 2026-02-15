@@ -18,7 +18,7 @@ export default defineConfig({
                 name: 'fest at jntuh - lifeatjntuh',
                 short_name: '@lifeatjntuh',
                 description: 'A open source fest tracking app for universities',
-                theme_color: '#ffffff',
+                theme_color: '#000000',
                 background_color: '#ffffff',
                 display: 'standalone',
                 icons: [

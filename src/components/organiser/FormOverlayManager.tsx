@@ -50,6 +50,7 @@ export default function FormOverlayManager() {
                             key={form.id}
                             formId={form.id}
                             event={form.entity as any}
+                            onSaved={form.onSaved}
                             minimized={form.minimized}
                             pillIndex={pillIndex}
                         />
@@ -62,6 +63,7 @@ export default function FormOverlayManager() {
                             key={form.id}
                             formId={form.id}
                             stall={form.entity as any}
+                            onSaved={form.onSaved}
                             minimized={form.minimized}
                             pillIndex={pillIndex}
                         />

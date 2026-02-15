@@ -265,6 +265,9 @@
         "confirmLeaveTeam": "Are you sure you want to leave this team? You will lose access to team management features.",
         "leave": "Leave",
         "failedToLeave": "Failed to leave team",
+        "transferOwnership": "Transfer Ownership",
+        "selectNewOwner": "Select New Owner",
+        "transferWarning": "This action cannot be undone. You will lose ownership of this event immediately.",
         "leftTeamSuccess": "You have left the team"
     },
     "stallForm": {

@@ -272,8 +272,9 @@ export default function EventDetailPage() {
                             toast('Please sign in first', { icon: '🔒' })
                             return
                         }
-                        const nowRegistered = await toggleRegistration()
-                        toast.success(nowRegistered ? t('event.registeredYou') : t('event.registrationRemoved'))
+                        const newState = !isRegistered
+                        toggleRegistration() // Optimistic update inside hook
+                        toast.success(newState ? t('event.registeredYou') : t('event.registrationRemoved'))
                     }}
                     disabled={regToggling}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all press-effect ${isRegistered

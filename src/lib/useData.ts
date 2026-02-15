@@ -91,10 +91,11 @@ export function useAllEvents() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
+    const refresh = useCallback(() => {
+        setLoading(true)
         supabase
             .from('events')
-            .select('*, bookmarks(count), event_registrations(count)')
+            .select('*, organizer:organizer_id(id, name, email), bookmarks(count), event_registrations(count)')
             .eq('is_published', true)
             .order('start_time', { ascending: true })
             .then(({ data, error: err }) => {
@@ -108,7 +109,11 @@ export function useAllEvents() {
             })
     }, [])
 
-    return { events, loading, error }
+    useEffect(() => {
+        refresh()
+    }, [refresh])
+
+    return { events, loading, error, refresh, setEvents }
 }
 
 // ===== Stalls Hooks =====
@@ -119,12 +124,12 @@ export function useStalls(category?: string) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
+    const refresh = useCallback(() => {
         setLoading(true)
         setError(null)
         let query = supabase
             .from('stalls')
-            .select('*')
+            .select('*, owner:owner_id(id, name, email)')
             .eq('is_active', true)
             .order('featured_position', { ascending: true, nullsFirst: false })
 
@@ -143,7 +148,11 @@ export function useStalls(category?: string) {
         })
     }, [category])
 
-    return { stalls, loading, error }
+    useEffect(() => {
+        refresh()
+    }, [refresh])
+
+    return { stalls, loading, error, refresh, setStalls }
 }
 
 // ===== Bookmark Hooks =====
@@ -695,6 +704,36 @@ export async function updateStall(stallId: string, updates: Partial<Stall>) {
         .select()
         .single()
     return { data: data as Stall | null, error }
+}
+
+export async function transferEventOwnership(
+    eventId: string,
+    newOwnerId: string,
+    newRoleForOldOwner: 'co_host' | 'member' | 'leave'
+) {
+    const executorId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
+    if (!executorId) return { error: { message: 'Not authenticated' } }
+
+    return supabase.rpc('transfer_event_ownership', {
+        target_event_id: eventId,
+        new_owner_id: newOwnerId,
+        new_role_for_old_owner: newRoleForOldOwner
+    })
+}
+
+export async function transferStallOwnership(
+    stallId: string,
+    newOwnerId: string,
+    newRoleForOldOwner: 'co_host' | 'member' | 'leave'
+) {
+    const executorId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
+    if (!executorId) return { error: { message: 'Not authenticated' } }
+
+    return supabase.rpc('transfer_stall_ownership', {
+        target_stall_id: stallId,
+        new_owner_id: newOwnerId,
+        new_role_for_old_owner: newRoleForOldOwner
+    })
 }
 
 /** Fetch team members for an event */

@@ -272,7 +272,7 @@ export default function OrganiserTools() {
                                             <Icon icon={event.is_published ? 'solar:eye-closed-linear' : 'solar:eye-linear'} width={14} />
                                             {event.is_published ? t('organiser.unpublish') : t('organiser.publish')}
                                         </button>
-                                        <button onClick={() => openForm('team', event)}
+                                        <button onClick={() => openForm('team', event, refreshEvents)}
                                             className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 rounded-lg text-xs font-semibold text-purple-700 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 transition-colors whitespace-nowrap">
                                             <Icon icon="solar:users-group-two-rounded-linear" width={14} />
                                             Team
@@ -368,7 +368,7 @@ export default function OrganiserTools() {
                                             <Icon icon={stall.is_active ? 'solar:power-bold' : 'solar:power-linear'} width={14} />
                                             {stall.is_active ? t('organiser.deactivate') : t('organiser.activate')}
                                         </button>
-                                        <button onClick={() => openForm('stall_team', stall)}
+                                        <button onClick={() => openForm('stall_team', stall, refreshStalls)}
                                             className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 rounded-lg text-xs font-semibold text-purple-700 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20 transition-colors whitespace-nowrap">
                                             <Icon icon="solar:users-group-two-rounded-linear" width={14} />
                                             {t('organiser.team')}
