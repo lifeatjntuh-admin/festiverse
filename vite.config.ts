@@ -52,6 +52,20 @@ export default defineConfig({
                 globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
                 runtimeCaching: [
                     {
+                        urlPattern: /^https:\/\/yirsptmegynzvjdblbtu\.supabase\.co\/storage\/v1\/object\/public\/.*/i,
+                        handler: 'CacheFirst',
+                        options: {
+                            cacheName: 'supabase-storage-cache',
+                            expiration: {
+                                maxEntries: 100,
+                                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                            },
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            }
+                        }
+                    },
+                    {
                         urlPattern: /^https:\/\/yirsptmegynzvjdblbtu\.supabase\.co\/rest\/v1\/.*/i,
                         handler: 'StaleWhileRevalidate',
                         options: {
@@ -94,7 +108,11 @@ export default defineConfig({
                         }
                     }
                 ]
-            }
+            },
+            devOptions: {
+                enabled: true,
+                type: 'module',
+            },
         })
     ],
     resolve: {
