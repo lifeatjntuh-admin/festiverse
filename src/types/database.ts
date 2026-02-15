@@ -149,17 +149,9 @@ export interface StallTeamMember {
     profile?: Profile
 }
 
-// ===== Bookmarks =====
-export interface Bookmark {
-    id: string
-    user_id: string
-    event_id: string | null
-    stall_id: string | null
-    type: 'event' | 'stall'
-    created_at: string
-}
 
-// ===== Registrations =====
+
+
 export interface EventRegistration {
     id: string
     event_id: string

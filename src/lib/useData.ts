@@ -3,8 +3,8 @@ import { supabase } from './supabase'
 import type { Event, Stall, Bookmark, EventRegistration, Profile, UserRole, FestDates } from '@/types/database'
 
 export const DEFAULT_FEST_DATES: FestDates = {
-    day1: { start: '2026-03-15T00:00:00+05:30', end: '2026-03-15T23:59:59+05:30' },
-    day2: { start: '2026-03-16T00:00:00+05:30', end: '2026-03-16T23:59:59+05:30' },
+    day1: { start: '2026-03-26T00:00:00+05:30', end: '2026-03-26T23:59:59+05:30' },
+    day2: { start: '2026-03-27T00:00:00+05:30', end: '2026-03-27T23:59:59+05:30' },
 }
 
 // ===== Events Hooks =====
@@ -903,13 +903,5 @@ export function useFestDates() {
     return { dates, loading, refresh }
 }
 
-export async function updateFestDates(dates: FestDates) {
-    const executorId = (await import('@/lib/useAuthStore')).useAuthStore.getState().user?.uid
-    if (!executorId) return { error: { message: 'Not authenticated' } }
 
-    return supabase.rpc('update_fest_dates', {
-        executor_id: executorId,
-        new_dates: dates
-    })
-}
 

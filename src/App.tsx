@@ -36,6 +36,8 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
     return <>{children}</>
 }
 
+import ReloadPrompt from '@/components/ReloadPrompt'
+
 function App() {
     // Auth listener is initialized in useAuthStore.ts
 
@@ -43,6 +45,7 @@ function App() {
     return (
         <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <ReloadPrompt />
                 <Toaster
                     position="top-center"
                     toastOptions={{
