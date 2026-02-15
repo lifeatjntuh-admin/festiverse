@@ -10,7 +10,7 @@ export interface AppSettings {
 
 export function useAppSettings() {
     const [settings, setSettings] = useState<AppSettings>({
-        appName: 'Festiverse',
+        appName: 'Fest at Campus',
         festDates: DEFAULT_FEST_DATES
     })
     const [loading, setLoading] = useState(true)
